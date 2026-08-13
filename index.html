@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6, user-scalable=yes">
+<title>Our Family Tree</title>
+<style>
+  :root{
+    --font-scale: 1;
+    --bg: #fbf6ec;
+    --card-bg: #ffffff;
+    --ink: #2b241a;
+    --accent: #8a6d3b;
+    --accent-dark: #5f4a24;
+    --line: #e3d7bd;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    font-size:calc(17px * var(--font-scale));
+    -webkit-text-size-adjust:100%;
+  }
+  header{
+    position:sticky;top:0;z-index:50;
+    background:var(--accent-dark);
+    color:#fff;
+    padding:14px 16px 10px;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+  }
+  .header-top-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+  header h1{ margin:0; font-size:calc(1.5em); letter-spacing:.5px; }
+  .header-btn-group{ display:flex; gap:8px; flex-shrink:0; }
+  .save-header-btn{
+    flex-shrink:0; background:#fff; color:var(--accent-dark); border:none;
+    border-radius:10px; padding:8px 14px; font-size:.85em; font-weight:700; cursor:pointer;
+  }
+  .save-header-btn.pending{ background:#f4c65a; }
+  .settings-header-btn{
+    flex-shrink:0; background:#fff2; color:#fff; border:1px solid #ffffff55;
+    border-radius:10px; width:38px; font-size:1.1em; cursor:pointer;
+  }
+  .connection-dot{
+    display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;
+    background:#c0392b;
+  }
+  .connection-dot.connected{ background:#4a8f3c; }
+  .toolbar{display:flex; gap:8px; align-items:center;}
+  .search-wrap{flex:1; position:relative;}
+  #search{
+    width:100%; padding:12px 14px; font-size:calc(1em);
+    border-radius:12px; border:none; background:#fff; color:var(--ink);
+  }
+  .textbtn{
+    background:#fff2; border:1px solid #ffffff55; color:#fff;
+    font-size:1.1em; font-weight:bold; padding:10px 14px;
+    border-radius:10px; cursor:pointer; min-width:44px;
+  }
+  .zoom-control{
+    display:flex; align-items:center; background:#fff2; border:1px solid #ffffff55;
+    border-radius:10px; overflow:hidden; flex-shrink:0;
+  }
+  .zoom-control button{
+    background:none; border:none; color:#fff; font-size:1.3em; font-weight:bold;
+    padding:9px 13px; cursor:pointer; line-height:1;
+  }
+  .zoom-control .zoom-icon{
+    font-size:1em; padding:0 4px; opacity:.85; border-left:1px solid #ffffff40;
+    border-right:1px solid #ffffff40; display:flex; align-items:center; height:1.4em;
+  }
+  .tabs{ display:flex; margin-top:10px; background:#00000022; border-radius:12px; overflow:hidden; }
+  .tab{ flex:1; text-align:center; padding:12px 6px; font-size:1em; font-weight:600; color:#fff; cursor:pointer; opacity:.75; }
+  .tab.active{ background:#fff; color:var(--accent-dark); opacity:1; }
+  main{padding:14px;}
+  #people-count{ text-align:center; color:#8a7a56; margin-bottom:10px; font-size:.9em; }
+  .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
+  .card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
+    padding:12px 8px 14px; text-align:center; cursor:pointer;
+    transition:transform .1s ease, box-shadow .15s ease, border-color .15s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .card:active{transform:scale(.96);}
+  .card.drag-over{
+    border-color:var(--accent); border-width:2px; background:#fff8ea;
+    box-shadow:0 0 0 4px #e9d9a8;
+  }
+  .avatar{
+    width:78px;height:78px; border-radius:50%; object-fit:cover;
+    margin:0 auto 8px; display:block; border:3px solid var(--line); background:#eee2c8;
+  }
+  .avatar.placeholder{ display:flex; align-items:center; justify-content:center; font-size:1.6em; font-weight:bold; color:var(--accent-dark); }
+  .card .name{ font-weight:700; font-size:.98em; line-height:1.25; word-break:break-word; }
+  .name-nickname{ display:block; font-style:italic; font-weight:600; font-size:.82em; color:#8a7a56; line-height:1.3; }
+  .name-main{ display:block; }
+  .name-maiden{ display:block; font-size:.82em; font-weight:500; color:#8a7a56; line-height:1.3; }
+  .card .dates{ font-size:.8em; color:#8a7a56; margin-top:4px; }
+
+  #tree-view{display:none;}
+  #tree-view.active{display:block;}
+  #people-view.active{display:block;}
+  #people-view{display:none;}
+  .tree-scroll{ overflow:auto; border:1px solid var(--line); border-radius:12px; background:#fff; -webkit-overflow-scrolling:touch; }
+  .tree-scroll img{ display:block; width:2200px; max-width:none; }
+  .zoom-tip{ text-align:center; margin-bottom:10px; color:#6b5c40; font-size:.95em; }
+
+  #surnames-view{ display:none; }
+  #surnames-view.active{ display:block; }
+  .textbtn2{
+    background:var(--bg); border:1px solid var(--line); color:var(--accent-dark);
+    font-size:.85em; font-weight:700; padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .sn-list{ display:flex; flex-direction:column; gap:8px; }
+  .sn-item{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; font-weight:700; font-size:1.02em;
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+  }
+  .sn-count{ font-weight:500; font-size:.78em; color:#a3946f; }
+  .dc-wrap{ overflow:auto; -webkit-overflow-scrolling:touch; padding:6px 0 24px; }
+  .dc-person{
+    background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
+    padding:6px 6px; text-align:center; cursor:pointer; width:92px; flex-shrink:0;
+  }
+  .dc-person.dc-root{ border-color:var(--accent); border-width:2.5px; background:#fff8ea; }
+  .dc-node{
+    position:absolute; background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
+    padding:6px 6px; text-align:center; cursor:pointer;
+  }
+  .dc-node.dc-root{ border-color:var(--accent); border-width:2.5px; background:#fff8ea; }
+  .dc-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; margin:0 auto 4px;
+    display:block; border:2px solid var(--line); background:#eee2c8; }
+  .dc-avatar.dc-placeholder{ display:flex; align-items:center; justify-content:center;
+    font-weight:700; color:var(--accent-dark); font-size:.9em; }
+  .dc-pname{ font-size:.68em; font-weight:700; line-height:1.15; }
+  .dc-pdates{ font-size:.62em; color:#8a7a56; margin-top:1px; }
+
+  .dc-tier{ display:flex; justify-content:center; align-items:center; gap:8px; margin:0 12px 4px; flex-wrap:wrap; }
+  .dc-tier-label{ text-align:center; font-size:.72em; text-transform:uppercase; letter-spacing:.06em;
+    color:#a3946f; margin:10px 0 4px; }
+  .dc-couple{ display:flex; align-items:center; }
+  .dc-spouse-link{ width:14px; height:2px; background:var(--accent); flex-shrink:0; }
+  .dc-vline{ width:2px; height:10px; background:var(--line); margin:0 auto; }
+
+  .overlay{ position:fixed;inset:0; background:rgba(20,15,5,.55); display:none; align-items:flex-end; justify-content:center; z-index:100; }
+  .settings-field{ text-align:left; margin-bottom:14px; }
+  .settings-field label{ display:block; font-size:.82em; font-weight:700; color:var(--accent-dark); margin-bottom:5px; }
+  .settings-field input{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    font-size:.95em; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .settings-field .hint{ font-size:.78em; color:#a3946f; margin-top:4px; }
+  .settings-status{ font-size:.85em; margin:10px 0; padding:10px 12px; border-radius:10px; text-align:left; }
+  .settings-status.ok{ background:#eaf3e6; color:#3a6b2c; }
+  .settings-status.err{ background:#fbe9e5; color:#a33a24; }
+  .settings-status.info{ background:#fff6e0; color:#7a6323; }
+  .publish-progress{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:300;
+    background:var(--accent-dark); color:#fff; padding:10px 18px; border-radius:20px;
+    font-size:.85em; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.25); display:none;
+  }
+  .publish-progress.active{ display:block; }
+  .overlay.active{display:flex;}
+  .sheet{ background:#fff; width:100%; max-width:520px; border-radius:22px 22px 0 0; padding:22px 20px 30px; text-align:center; max-height:88vh; overflow:auto; transition:box-shadow .15s ease, background .15s ease; }
+  .sheet.sheet-drag-over{ background:#fff8ea; box-shadow:inset 0 0 0 3px var(--accent); }
+  .sheet-topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .sheet .close{ background:var(--line); border:none; border-radius:50%; width:38px;height:38px; font-size:1.2em; color:var(--accent-dark); cursor:pointer; margin-left:auto; }
+  .back-btn{
+    background:var(--line); border:none; border-radius:50%; width:38px;height:38px;
+    font-size:1.3em; font-weight:700; color:var(--accent-dark); cursor:pointer;
+  }
+  .avatar-big{ width:170px;height:170px; border-radius:50%; object-fit:cover; margin:0 auto 16px; display:block; border:4px solid var(--line); background:#eee2c8; }
+  .avatar-big.placeholder{ display:flex;align-items:center;justify-content:center; font-size:3em;font-weight:bold;color:var(--accent-dark); }
+  .sheet h2{ margin:0 0 8px; font-size:1.5em; color:var(--accent-dark); }
+  #nameEditInput{
+    width:100%; font-size:1.5em; font-weight:700; color:var(--accent-dark);
+    text-align:center; border:2px solid var(--accent); border-radius:10px;
+    padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
+  }
+  #datesEditInput{
+    width:100%; font-size:1.05em; color:var(--accent-dark);
+    text-align:center; border:2px solid var(--accent); border-radius:10px;
+    padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
+  }
+  .dates-big{ font-size:1.15em; color:#7a6a48; margin-bottom:6px; }
+
+  .edit-toggle{
+    margin:10px auto 0; display:inline-flex; align-items:center; gap:6px;
+    background:var(--bg); border:1px solid var(--line); border-radius:20px;
+    padding:8px 16px; font-size:.85em; font-weight:700; color:var(--accent-dark); cursor:pointer;
+  }
+  .edit-toggle.on{ background:var(--accent-dark); color:#fff; }
+
+  .rel-section{ text-align:left; margin-top:18px; }
+  .rel-title{ font-size:.85em; text-transform:uppercase; letter-spacing:.06em; color:#a3946f; font-weight:700; margin:16px 0 8px; display:flex; justify-content:space-between; align-items:center; }
+  .rel-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ background:var(--bg); border:1px solid var(--line); border-radius:20px; padding:6px 14px 6px 6px; font-size:.95em; cursor:pointer; font-weight:600; color:var(--accent-dark); display:inline-flex; align-items:center; gap:8px; }
+  .chip-self{
+    cursor:default; opacity:.6; background:transparent;
+    border:1.5px dashed var(--line); color:#a3946f;
+  }
+  .chip-avatar{
+    width:28px; height:28px; border-radius:50%; object-fit:cover;
+    flex-shrink:0; background:#eee2c8; border:1px solid var(--line);
+  }
+  .chip-avatar-placeholder{
+    display:flex; align-items:center; justify-content:center;
+    font-size:.7em; font-weight:800; color:var(--accent-dark);
+  }
+  .chip-name{ line-height:1.2; display:flex; flex-direction:column; }
+  .chip-name-nick{ display:block; font-style:italic; font-weight:600; font-size:.85em; color:#a3946f; }
+  .chip-name-main{ display:block; }
+  .chip-name-maiden{ display:block; font-size:.85em; font-weight:500; color:#a3946f; }
+  .chip:active{ background:var(--line); }
+  .chip .rm{ color:#b3452f; font-weight:900; padding-left:2px; }
+  .no-data{ color:#b3a583; font-size:.9em; font-style:italic; }
+
+  .add-chip-btn{
+    background:none; border:1.5px dashed var(--accent); border-radius:20px;
+    padding:8px 14px; font-size:.9em; font-weight:700; color:var(--accent); cursor:pointer;
+  }
+  .add-search{ margin-top:8px; display:none; }
+  .add-search.active{ display:block; }
+  .add-search input{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    font-size:.95em; margin-bottom:6px; font-family:inherit;
+  }
+  .add-results{ max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:10px; }
+  .add-result-item{ padding:10px 12px; font-size:.9em; cursor:pointer; border-bottom:1px solid var(--line); text-align:left; }
+  .add-result-item:last-child{ border-bottom:none; }
+  .create-new-item{ color:var(--accent-dark); background:#fbf6ec; font-weight:600; }
+  .create-new-item strong{ font-weight:800; }
+  .add-result-item:active{ background:var(--bg); }
+
+  .flag-btn{ margin-top:24px; width:100%; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:#a3946f; font-size:.85em; cursor:pointer; }
+  .delete-person-btn{
+    margin-top:14px; width:100%; padding:12px; border-radius:12px;
+    border:1px solid #e0b3a3; background:#fbf0ec; color:#b3452f;
+    font-size:.9em; font-weight:700; cursor:pointer;
+  }
+  .flag-note{ margin-top:10px; font-size:.85em; color:#7a6a48; background:#fbf6ec; border-radius:10px; padding:10px; display:none; text-align:left; }
+  .flag-note.active{display:block;}
+
+  .verify-banner{ background:#fff6e0; border:1px solid #e9d9a8; color:#7a6323; border-radius:12px; padding:10px 14px; font-size:.88em; margin-bottom:14px; }
+  .sort-row{ display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .sort-row label{ font-size:.85em; color:#8a7a56; font-weight:600; }
+  .sort-row select{
+    flex:1; min-width:110px; padding:8px 10px; border-radius:10px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-size:.9em; font-family:inherit;
+  }
+  .sort-dir-btn{
+    background:#fff; border:1px solid var(--line); color:var(--accent-dark);
+    padding:8px 12px; border-radius:10px; font-size:.85em; font-weight:700; cursor:pointer;
+  }
+
+  .save-bar{
+    position:sticky; bottom:0; background:#fff; border-top:1px solid var(--line);
+    padding:12px 20px; margin:20px -20px -30px; display:none; gap:10px;
+  }
+  .save-bar.active{ display:flex; }
+  .save-bar button{
+    flex:1; padding:12px; border-radius:12px; border:none; font-weight:700; font-size:.95em; cursor:pointer;
+  }
+  .save-bar .save-btn{ background:var(--accent-dark); color:#fff; }
+  .save-bar .cancel-btn{ background:var(--bg); color:var(--accent-dark); border:1px solid var(--line); }
+
+  .add-person-btn{
+    background:#fff2; border:1.5px solid #ffffff77; color:#fff;
+    font-size:.85em; font-weight:700; padding:9px 16px; border-radius:20px; cursor:pointer;
+  }
+
+  .photo-upload-btn{
+    display:inline-block; background:var(--bg); border:1px solid var(--line);
+    color:var(--accent-dark); font-size:.85em; font-weight:700;
+    padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .photo-gallery{
+    display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .gallery-item{
+    position:relative; flex-shrink:0; width:84px; height:84px;
+  }
+  .gallery-item img{
+    width:84px; height:84px; border-radius:50%; object-fit:cover;
+    border:3px solid var(--line); cursor:pointer; display:block;
+  }
+  .gallery-item.is-default img{ border-color: var(--accent); border-width:3px; }
+  .gallery-rm{
+    position:absolute; top:-4px; right:-4px; background:#b3452f; color:#fff;
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:.75em; font-weight:900; cursor:pointer;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .gallery-star{
+    position:absolute; bottom:-2px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:#fff; font-size:.7em; border-radius:10px;
+    padding:1px 6px; box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .view-gallery{ justify-content:center; padding:4px 2px 4px; }
+  .gallery-item.view-only{ width:96px; height:96px; }
+  .gallery-item.view-only img{
+    width:96px; height:96px; border-color:var(--line); border-width:3px;
+  }
+
+  .photo-viewer-overlay{
+    position:fixed; inset:0; background:rgba(10,8,4,.95); z-index:200;
+    display:none; align-items:center; justify-content:center;
+  }
+  .photo-viewer-overlay.active{ display:flex; }
+  .viewer-img{ max-width:92vw; max-height:88vh; object-fit:contain; display:block; }
+  .viewer-back{
+    position:absolute; top:18px; left:16px; background:#ffffff22; border:none;
+    color:#fff; width:42px; height:42px; border-radius:50%; font-size:1.4em;
+    cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center;
+  }
+  .viewer-nav{
+    position:absolute; top:50%; transform:translateY(-50%); background:#ffffff22;
+    border:none; color:#fff; width:48px; height:48px; border-radius:50%;
+    font-size:2em; line-height:1; cursor:pointer; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .viewer-prev{ left:14px; }
+  .viewer-next{ right:14px; }
+
+  #newNameInput, #newDatesInput{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    font-size:1em; margin-bottom:10px; font-family:inherit; text-align:center;
+  }
+  #newNameInput{ font-weight:700; font-size:1.2em; color:var(--accent-dark); }
+  .new-person-label{
+    font-size:.8em; text-transform:uppercase; letter-spacing:.05em; color:#a3946f;
+    font-weight:700; text-align:left; margin:4px 0 6px;
+  }
+
+  footer{ text-align:center; color:#a3947a; font-size:.8em; padding:24px 10px 40px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top-row">
+    <h1>&#127795; Our Family Tree</h1>
+    <div class="header-btn-group">
+      <button class="settings-header-btn" id="settingsBtn" title="Connection settings">&#9881;</button>
+      <button class="save-header-btn" id="saveFileBtn" title="Publish your changes">&#128190; Save</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="search-wrap"><input id="search" type="text" placeholder="Search a name..."></div>
+    <div class="zoom-control">
+      <button id="font-minus" title="Smaller text">&#8722;</button>
+      <span class="zoom-icon">&#128269;</span>
+      <button id="font-plus" title="Bigger text">&#43;</button>
+    </div>
+  </div>
+  <div style="text-align:center; margin-top:10px;">
+    <button class="add-person-btn" id="addPersonBtn">+ Add someone new</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-tab="people">People</div>
+    <div class="tab" data-tab="surnames">By Surname</div>
+    <div class="tab" data-tab="tree">Full Tree</div>
+  </div>
+</header>
+
+<main>
+  <div id="people-view" class="active">
+    <div class="verify-banner">Parents / siblings / children are a best guess based on the chart layout. Open anyone's page, tap "Edit", and fix names or connections directly &mdash; then tap "Save" top right to save your changes.</div>
+    <div class="sort-row">
+      <label for="sortField">Sort by</label>
+      <select id="sortField">
+        <option value="name">Name</option>
+        <option value="surname">Surname</option>
+        <option value="dob">Date of birth</option>
+      </select>
+      <button id="sortDirBtn" class="sort-dir-btn" title="Toggle ascending/descending">&#8593; A&ndash;Z</button>
+    </div>
+    <div id="people-count"></div>
+    <div class="drop-hint">Tip: drag and drop a photo onto anyone's card to add it to their profile</div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="surnames-view">
+    <div id="surnames-back-row" style="display:none; margin-bottom:12px;">
+      <button class="textbtn2" id="surnamesBackBtn">&#8592; Back to surnames</button>
+    </div>
+    <div id="surnames-body"></div>
+  </div>
+
+  <div id="tree-view">
+    <div class="zoom-tip">Pinch with two fingers to zoom in, then drag to look around.</div>
+    <div class="tree-scroll"><img id="tree-img" src="tree.jpg" alt="Full family tree chart"></div>
+  </div>
+</main>
+
+<footer>Made with love for the family &#10084;&#65039;</footer>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-topbar">
+      <button class="back-btn" id="backBtn" style="display:none;">&#8592;</button>
+      <button class="close" id="closeSheet">&#10005;</button>
+    </div>
+    <div id="sheetAvatar"></div>
+    <div id="photoEditRow" style="display:none; text-align:center; margin:-10px 0 14px;">
+      <label class="photo-upload-btn" for="photoFileInput">&#128247; Add photos</label>
+      <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;">
+    </div>
+    <input id="nameEditInput" type="text">
+    <h2 id="sheetName"></h2>
+    <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+    <div class="dates-big" id="sheetDates"></div>
+
+    <div style="text-align:center;">
+      <div class="edit-toggle" id="editToggle">&#9998; Edit this person</div>
+    </div>
+
+    <div class="rel-section">
+      <div class="rel-title"><span>Parents</span></div>
+      <div class="rel-chips" id="relParents"></div>
+      <div class="add-search" id="addSearch-parents">
+        <input type="text" placeholder="Search a name to add..." data-field="parents">
+        <div class="add-results" data-field="parents"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Spouse</span></div>
+      <div class="rel-chips" id="relSpouse"></div>
+      <div class="add-search" id="addSearch-spouse">
+        <input type="text" placeholder="Search a name to add..." data-field="spouse">
+        <div class="add-results" data-field="spouse"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Siblings</span></div>
+      <div class="rel-chips" id="relSiblings"></div>
+      <div class="add-search" id="addSearch-siblings">
+        <input type="text" placeholder="Search a name to add..." data-field="siblings">
+        <div class="add-results" data-field="siblings"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Children</span></div>
+      <div class="rel-chips" id="relChildren"></div>
+      <div class="add-search" id="addSearch-children">
+        <input type="text" placeholder="Search a name to add..." data-field="children">
+        <div class="add-results" data-field="children"></div>
+      </div>
+    </div>
+
+    <div class="save-bar" id="saveBar">
+      <button class="cancel-btn" id="cancelEdit">Cancel</button>
+      <button class="save-btn" id="saveEdit">Save changes</button>
+    </div>
+    <button class="delete-person-btn" id="deletePersonBtn" style="display:none;">&#128465; Delete this person</button>
+
+    <button class="flag-btn" id="flagBtn">Something wrong on this page?</button>
+    <div class="flag-note" id="flagNote">Tap "Edit this person" above to fix the name or connections yourself &mdash; or tell whoever shared this file what's wrong so they can fix it.</div>
+  </div>
+</div>
+
+<div class="overlay" id="deleteConfirmOverlay">
+  <div class="sheet" style="max-width:420px;">
+    <h2 style="margin-top:0;">Delete this person?</h2>
+    <p id="deleteConfirmText" style="color:var(--ink); line-height:1.5;"></p>
+    <p style="color:#8a7a56; font-size:.9em;">This removes them completely and clears them from anyone else's parents, spouse, siblings, or children. This can't be undone.</p>
+    <div class="save-bar active">
+      <button class="cancel-btn" id="cancelDelete">Cancel</button>
+      <button class="save-btn" id="confirmDelete" style="background:#b3452f;">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="photo-viewer-overlay" id="photoViewerOverlay">
+  <button class="viewer-back" id="viewerBack">&#8592;</button>
+  <button class="viewer-nav viewer-prev" id="viewerPrev">&#8249;</button>
+  <img class="viewer-img" id="viewerImg" src="" alt="">
+  <button class="viewer-nav viewer-next" id="viewerNext">&#8250;</button>
+</div>
+
+<div class="publish-progress" id="publishProgress"></div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet" style="max-width:440px;">
+    <div class="sheet-topbar"><button class="close" id="settingsClose">&#10005;</button></div>
+    <h2 style="margin-top:0;">Family site connection</h2>
+    <p style="color:#8a7a56; font-size:.88em; text-align:left; line-height:1.5;">
+      Connect this app to the family website on GitHub so tapping "Save" publishes your
+      changes for everyone, straight from your phone.
+    </p>
+    <div id="settingsStatus"></div>
+    <div class="settings-field">
+      <label for="ghOwner">GitHub username</label>
+      <input id="ghOwner" type="text" autocapitalize="off" autocorrect="off" placeholder="e.g. markusburger">
+    </div>
+    <div class="settings-field">
+      <label for="ghRepo">Repository name</label>
+      <input id="ghRepo" type="text" autocapitalize="off" autocorrect="off" placeholder="e.g. family-tree">
+    </div>
+    <div class="settings-field">
+      <label for="ghToken">Access token</label>
+      <input id="ghToken" type="password" autocapitalize="off" autocorrect="off" placeholder="paste your token here">
+      <div class="hint">Kept only on this phone &mdash; never sent anywhere except GitHub itself.</div>
+    </div>
+    <div class="save-bar active">
+      <button class="cancel-btn" id="ghDisconnect">Disconnect</button>
+      <button class="save-btn" id="ghTestConnect">Connect</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="newOverlay">
+  <div class="sheet">
+    <button class="close" id="closeNewSheet">&#10005;</button>
+    <h2 style="margin-top:0;">Add someone new</h2>
+
+    <div id="newPhotoPreview" style="text-align:center; margin-bottom:8px;"></div>
+    <div style="text-align:center; margin-bottom:14px;">
+      <label class="photo-upload-btn" for="newPhotoFileInput">&#128247; Add photos (optional)</label>
+      <input type="file" id="newPhotoFileInput" accept="image/*" multiple style="display:none;">
+    </div>
+
+    <div class="new-person-label">Name</div>
+    <input id="newNameInput" type="text" placeholder="Full name">
+    <div class="new-person-label">Dates (optional)</div>
+    <input id="newDatesInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+
+    <div class="rel-section">
+      <div class="rel-title"><span>Parents</span></div>
+      <div class="rel-chips" id="newRelParents"></div>
+      <div class="add-search" id="addSearch-new-parents">
+        <input type="text" placeholder="Search a name to add..." data-field="parents" data-mode="new">
+        <div class="add-results" data-field="parents" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Spouse</span></div>
+      <div class="rel-chips" id="newRelSpouse"></div>
+      <div class="add-search" id="addSearch-new-spouse">
+        <input type="text" placeholder="Search a name to add..." data-field="spouse" data-mode="new">
+        <div class="add-results" data-field="spouse" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Siblings</span></div>
+      <div class="rel-chips" id="newRelSiblings"></div>
+      <div class="add-search" id="addSearch-new-siblings">
+        <input type="text" placeholder="Search a name to add..." data-field="siblings" data-mode="new">
+        <div class="add-results" data-field="siblings" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Children</span></div>
+      <div class="rel-chips" id="newRelChildren"></div>
+      <div class="add-search" id="addSearch-new-children">
+        <input type="text" placeholder="Search a name to add..." data-field="children" data-mode="new">
+        <div class="add-results" data-field="children" data-mode="new"></div>
+      </div>
+    </div>
+
+    <div class="save-bar active">
+      <button class="cancel-btn" id="cancelNewPerson">Cancel</button>
+      <button class="save-btn" id="saveNewPerson">Add person</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+let PEOPLE = [];
+const BY_ID = {};
+function normalizePerson(p){
+  // migrate any legacy single-photo entries (old versions of this file) into the photos array
+  if(!p.photos){ p.photos = p.photo ? [p.photo] : []; }
+  delete p.photo;
+  return p;
+}
+function dedupePeople(){
+  PEOPLE.forEach(normalizePerson);
+  const seen = new Map();
+  PEOPLE.forEach(p => {
+    if(seen.has(p.id)){
+      // merge: keep richer data (union everything) rather than silently dropping
+      const existing = seen.get(p.id);
+      ['photos','spouse','parents','siblings','children'].forEach(f => {
+        existing[f] = Array.from(new Set([...(existing[f]||[]), ...(p[f]||[])]));
+      });
+    } else {
+      seen.set(p.id, p);
+    }
+  });
+  PEOPLE = Array.from(seen.values());
+}
+function rebuildIndex(){ dedupePeople(); Object.keys(BY_ID).forEach(k=>delete BY_ID[k]); PEOPLE.forEach(p => BY_ID[p.id] = p); }
+
+// The family site's data.json is always the source of truth -- fetched fresh on every
+// visit so everyone sees the latest published version, never a stale local copy.
+try{
+  const resp = await fetch('data.json', {cache: 'no-store'});
+  if(!resp.ok) throw new Error('Server responded with ' + resp.status);
+  PEOPLE = await resp.json();
+}catch(err){
+  document.body.innerHTML = `<div style="padding:60px 24px;text-align:center;font-family:-apple-system,sans-serif;color:#5f4a24;max-width:420px;margin:0 auto;">
+    <h2 style="margin-bottom:8px;">Couldn't load the family tree</h2>
+    <p style="color:#8a7a56;">Please check your internet connection and try reloading the page.</p>
+    <p style="font-size:.75em;color:#b3a583;margin-top:16px;">${err.message}</p>
+  </div>`;
+  throw err;
+}
+rebuildIndex();
+
+function initials(name){
+  return name.replace(/\(.*?\)/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+}
+function mainPhoto(p){ return (p.photos && p.photos.length) ? p.photos[0] : null; }
+
+// A leading (Xxx)Name = nickname; a trailing Name(Xxx) = maiden name.
+// Splitting them onto their own lines avoids awkward mid-word wraps on narrow tiles.
+function parseDisplayName(name){
+  let core = name;
+  let nickname = null, maiden = null;
+  const lead = core.match(/^\(([^)]+)\)\s*(.*)$/);
+  if(lead){ nickname = lead[1].trim(); core = lead[2]; }
+  const trail = core.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if(trail){ core = trail[1].trim(); maiden = trail[2].trim(); }
+  return { nickname, main: core.trim(), maiden };
+}
+function nameBlockHtml(name, mainCls, nickCls, maidenCls){
+  const { nickname, main, maiden } = parseDisplayName(name);
+  let html = '';
+  if(nickname) html += `<span class="${nickCls}">${nickname}</span>`;
+  html += `<span class="${mainCls}">${main}</span>`;
+  if(maiden) html += `<span class="${maidenCls}">(${maiden})</span>`;
+  return html;
+}
+
+const grid = document.getElementById('grid');
+const countEl = document.getElementById('people-count');
+let sortField = 'name';
+let sortDir = 'asc';
+function sortedList(){
+  const list = [...PEOPLE];
+  list.sort((a,b) => {
+    let cmp = 0;
+    if(sortField === 'name'){
+      cmp = parseDisplayName(a.name).main.localeCompare(parseDisplayName(b.name).main);
+    } else if(sortField === 'surname'){
+      cmp = parseSurname(a.name).localeCompare(parseSurname(b.name));
+    } else if(sortField === 'dob'){
+      const da = parseBirthDate(a.dates), db = parseBirthDate(b.dates);
+      if(da==null && db==null) cmp = 0;
+      else if(da==null) cmp = 1;
+      else if(db==null) cmp = -1;
+      else cmp = da - db;
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+  return list;
+}
+function updateSortDirLabel(){
+  const btn = document.getElementById('sortDirBtn');
+  if(sortField === 'dob'){
+    btn.innerHTML = sortDir === 'asc' ? '&#8593; Oldest first' : '&#8595; Newest first';
+  } else {
+    btn.innerHTML = sortDir === 'asc' ? '&#8593; A&ndash;Z' : '&#8595; Z&ndash;A';
+  }
+}
+document.getElementById('sortField').addEventListener('change', (e) => {
+  sortField = e.target.value;
+  updateSortDirLabel();
+  render(applyCurrentFilter());
+});
+document.getElementById('sortDirBtn').onclick = () => {
+  sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  updateSortDirLabel();
+  render(applyCurrentFilter());
+};
+
+function render(list){
+  grid.innerHTML = '';
+  list.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openSheet(p.id);
+    let avatarHtml = mainPhoto(p)
+      ? `<img class="avatar" src="${mainPhoto(p)}" alt="${p.name}">`
+      : `<div class="avatar placeholder">${initials(p.name)}</div>`;
+    card.innerHTML = `${avatarHtml}<div class="name">${nameBlockHtml(p.name,'name-main','name-nickname','name-maiden')}</div><div class="dates">${p.dates || ''}</div>`;
+    attachPhotoDropZone(card, p.id);
+    grid.appendChild(card);
+  });
+  countEl.textContent = list.length + (list.length === 1 ? ' person' : ' people');
+}
+
+// Lets someone drag image files from their computer and drop them straight onto a
+// person's card to add those photos, without opening the edit screen first.
+function attachPhotoDropZone(card, personId){
+  let dragCounter = 0;
+  card.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  card.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    card.classList.add('drag-over');
+  });
+  card.addEventListener('dragleave', () => {
+    dragCounter = Math.max(0, dragCounter - 1);
+    if(dragCounter === 0) card.classList.remove('drag-over');
+  });
+  card.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    card.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+    if(!files.length) return;
+    addPhotosToPerson(personId, files);
+  });
+}
+
+function addPhotosToPerson(personId, files){
+  const person = BY_ID[personId];
+  if(!person) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!person.photos) person.photos = [];
+      person.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0){
+        saveToLocalStorage();
+        render(applyCurrentFilter());
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Lets someone drop photo files directly onto the open profile sheet to add them to
+// whoever's profile is currently showing -- goes into the draft while editing (applied
+// on Save, like the rest of the edit form), or straight onto the real record otherwise.
+function handleSheetPhotoDrop(files){
+  if(currentId == null) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(editing && draft){
+        if(!draft.photos) draft.photos = [];
+        draft.photos.push(reader.result);
+      } else {
+        const person = BY_ID[currentId];
+        if(!person) return;
+        if(!person.photos) person.photos = [];
+        person.photos.push(reader.result);
+      }
+      remaining--;
+      if(remaining === 0){
+        if(!editing) saveToLocalStorage();
+        refreshSheet();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+(function setupSheetDropZone(){
+  const sheetEl = document.querySelector('#overlay .sheet');
+  if(!sheetEl) return;
+  let dragCounter = 0;
+  sheetEl.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  sheetEl.addEventListener('dragenter', (e) => {
+    e.preventDefault();
+    dragCounter++;
+    sheetEl.classList.add('sheet-drag-over');
+  });
+  sheetEl.addEventListener('dragleave', () => {
+    dragCounter = Math.max(0, dragCounter - 1);
+    if(dragCounter === 0) sheetEl.classList.remove('sheet-drag-over');
+  });
+  sheetEl.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dragCounter = 0;
+    sheetEl.classList.remove('sheet-drag-over');
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+    if(files.length) handleSheetPhotoDrop(files);
+  });
+})();
+
+// Extracts a sortable value from the leading date in a dates string, regardless of whether
+// it uses "/" or "-" as the day/month/year separator (both appear in this data).
+function parseBirthDate(dates){
+  if(!dates) return null;
+  const m = dates.match(/^\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return null;
+  let day = parseInt(m[1],10), month = parseInt(m[2],10), year = parseInt(m[3],10);
+  if(year < 100) year += (year < 30 ? 2000 : 1900);
+  if(isNaN(day)||isNaN(month)||isNaN(year)) return null;
+  return year*10000 + month*100 + day;
+}
+
+function chipsFor(container, ids, field, editing, mode, selfPerson){
+  container.innerHTML = '';
+  let list = ids ? ids.slice() : [];
+
+  if(field === 'siblings' || field === 'children'){
+    const items = list.filter(id => BY_ID[id]).map(id => ({ id, person: BY_ID[id], isSelf:false }));
+    // only show the "you are here" placeholder among siblings, and only when there are other siblings to order against
+    if(field === 'siblings' && selfPerson && list.length > 0){
+      items.push({ id: selfPerson.id, person: selfPerson, isSelf:true });
+    }
+    items.sort((a,b) => {
+      const da = parseBirthDate(a.person.dates), db = parseBirthDate(b.person.dates);
+      if(da==null && db==null) return 0;
+      if(da==null) return 1;
+      if(db==null) return -1;
+      return da - db;
+    });
+    if(!items.length && !editing){
+      container.innerHTML = '<span class="no-data">Not shown in this tree</span>';
+    }
+    items.forEach(item => {
+      const person = item.person;
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (item.isSelf ? ' chip-self' : '');
+      const avatarHtml = mainPhoto(person)
+        ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
+        : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
+      chip.innerHTML = avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+        (editing && !item.isSelf ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
+      if(item.isSelf){
+        // greyed out, unclickable -- just shows this person's place in birth order
+      } else if(!editing){
+        chip.onclick = () => openSheet(item.id, true);
+      } else {
+        chip.querySelector('.rm').onclick = (e) => {
+          e.stopPropagation();
+          if(mode === 'new'){ removeNewPersonRelation(field, item.id); } else { removeRelation(field, item.id); }
+        };
+      }
+      container.appendChild(chip);
+    });
+    if(editing){
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-chip-btn';
+      addBtn.textContent = '+ Add';
+      addBtn.onclick = () => {
+        const boxId = mode === 'new' ? 'addSearch-new-'+field : 'addSearch-'+field;
+        const box = document.getElementById(boxId);
+        box.classList.toggle('active');
+        if(box.classList.contains('active')) box.querySelector('input').focus();
+      };
+      container.appendChild(addBtn);
+    }
+    return;
+  }
+
+  if(ids && ids.length){
+    ids.forEach(id => {
+      const person = BY_ID[id];
+      if(!person) return;
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const avatarHtml = mainPhoto(person)
+        ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
+        : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
+      chip.innerHTML = avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+        (editing ? ' <span class="rm" data-remove="'+field+'" data-id="'+id+'">&#10005;</span>' : '');
+      if(!editing){
+        chip.onclick = () => openSheet(id, true);
+      } else {
+        chip.querySelector('.rm').onclick = (e) => {
+          e.stopPropagation();
+          if(mode === 'new'){ removeNewPersonRelation(field, id); } else { removeRelation(field, id); }
+        };
+      }
+      container.appendChild(chip);
+    });
+  } else if(!editing){
+    container.innerHTML = '<span class="no-data">Not shown in this tree</span>';
+  }
+  if(editing){
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-chip-btn';
+    addBtn.textContent = '+ Add';
+    addBtn.onclick = () => {
+      const boxId = mode === 'new' ? 'addSearch-new-'+field : 'addSearch-'+field;
+      const box = document.getElementById(boxId);
+      box.classList.toggle('active');
+      if(box.classList.contains('active')) box.querySelector('input').focus();
+    };
+    container.appendChild(addBtn);
+  }
+}
+
+let currentId = null;
+let editing = false;
+let draft = null; // working copy of current person + connections while editing
+let navHistory = []; // stack of person ids visited via chip taps, for the back button
+
+function refreshSheet(){
+  const p = editing ? draft : BY_ID[currentId];
+  document.getElementById('sheetName').innerHTML = nameBlockHtml(p.name,'name-main','name-nickname','name-maiden');
+  document.getElementById('nameEditInput').value = p.name;
+  document.getElementById('sheetDates').textContent = p.dates || '';
+  document.getElementById('datesEditInput').value = p.dates || '';
+  document.getElementById('backBtn').style.display = (navHistory.length && !editing) ? 'flex' : 'none';
+  renderPhotoGallery(document.getElementById('sheetAvatar'), p, editing, false);
+
+  chipsFor(document.getElementById('relParents'), p.parents, 'parents', editing);
+  chipsFor(document.getElementById('relSpouse'), p.spouse, 'spouse', editing);
+  chipsFor(document.getElementById('relSiblings'), p.siblings, 'siblings', editing, undefined, p);
+  chipsFor(document.getElementById('relChildren'), p.children, 'children', editing);
+
+  document.getElementById('sheetName').style.display = editing ? 'none' : 'block';
+  document.getElementById('nameEditInput').style.display = editing ? 'block' : 'none';
+  document.getElementById('sheetDates').style.display = editing ? 'none' : 'block';
+  document.getElementById('datesEditInput').style.display = editing ? 'block' : 'none';
+  document.getElementById('photoEditRow').style.display = editing ? 'block' : 'none';
+  document.getElementById('editToggle').classList.toggle('on', editing);
+  document.getElementById('editToggle').textContent = editing ? 'Editing...' : '\u270E Edit this person';
+  document.getElementById('saveBar').classList.toggle('active', editing);
+  document.getElementById('deletePersonBtn').style.display = editing ? 'block' : 'none';
+  document.querySelectorAll('.add-search').forEach(b => b.classList.remove('active'));
+}
+
+// Renders either a single big avatar (view mode) or a scrollable gallery with
+// set-default and delete controls (edit mode). `isNew` targets the newDraft object.
+function renderPhotoGallery(container, p, editing, isNew){
+  container.innerHTML = '';
+  const photos = p.photos || [];
+  if(!editing){
+    if(!photos.length){
+      container.innerHTML = `<div class="avatar-big placeholder">${initials(p.name)}</div>`;
+      return;
+    }
+    const galleryWrap = document.createElement('div');
+    galleryWrap.className = 'photo-gallery view-gallery';
+    photos.forEach((src, idx) => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item view-only';
+      item.innerHTML = `<img src="${src}" alt="${p.name}">`;
+      item.onclick = () => openPhotoViewer(photos, idx);
+      galleryWrap.appendChild(item);
+    });
+    container.appendChild(galleryWrap);
+    return;
+  }
+  const galleryWrap = document.createElement('div');
+  galleryWrap.className = 'photo-gallery';
+  if(!photos.length){
+    const ph = document.createElement('div');
+    ph.className = 'avatar-big placeholder';
+    ph.textContent = initials(p.name);
+    galleryWrap.appendChild(ph);
+  }
+  photos.forEach((src, idx) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item' + (idx === 0 ? ' is-default' : '');
+    item.innerHTML = `<img src="${src}" alt="">
+      <span class="gallery-rm" title="Remove photo">&#10005;</span>
+      ${idx === 0 ? '<span class="gallery-star" title="Default photo">&#9733;</span>' : ''}`;
+    item.querySelector('img').onclick = () => {
+      if(isNew){ setDefaultNewPhoto(idx); } else { setDefaultDraftPhoto(idx); }
+    };
+    item.querySelector('.gallery-rm').onclick = (e) => {
+      e.stopPropagation();
+      if(isNew){ removeNewPhoto(idx); } else { removeDraftPhoto(idx); }
+    };
+    galleryWrap.appendChild(item);
+  });
+  container.appendChild(galleryWrap);
+}
+
+let viewerPhotos = [];
+let viewerIndex = 0;
+function openPhotoViewer(photos, idx){
+  viewerPhotos = photos;
+  viewerIndex = idx;
+  renderViewerPhoto();
+  document.getElementById('photoViewerOverlay').classList.add('active');
+}
+function renderViewerPhoto(){
+  document.getElementById('viewerImg').src = viewerPhotos[viewerIndex];
+  document.getElementById('viewerPrev').style.visibility = viewerPhotos.length > 1 ? 'visible' : 'hidden';
+  document.getElementById('viewerNext').style.visibility = viewerPhotos.length > 1 ? 'visible' : 'hidden';
+}
+function viewerPrev(){
+  viewerIndex = (viewerIndex - 1 + viewerPhotos.length) % viewerPhotos.length;
+  renderViewerPhoto();
+}
+function viewerNext(){
+  viewerIndex = (viewerIndex + 1) % viewerPhotos.length;
+  renderViewerPhoto();
+}
+document.getElementById('viewerBack').onclick = () => document.getElementById('photoViewerOverlay').classList.remove('active');
+document.getElementById('viewerPrev').onclick = viewerPrev;
+document.getElementById('viewerNext').onclick = viewerNext;
+
+function setDefaultDraftPhoto(idx){
+  const [chosen] = draft.photos.splice(idx,1);
+  draft.photos.unshift(chosen);
+  refreshSheet();
+}
+function removeDraftPhoto(idx){
+  draft.photos.splice(idx,1);
+  refreshSheet();
+}
+function setDefaultNewPhoto(idx){
+  const [chosen] = newDraft.photos.splice(idx,1);
+  newDraft.photos.unshift(chosen);
+  refreshNewSheet();
+}
+function removeNewPhoto(idx){
+  newDraft.photos.splice(idx,1);
+  refreshNewSheet();
+}
+
+function openSheet(id, fromChip){
+  if(fromChip && currentId !== null && currentId !== id){
+    navHistory.push(currentId);
+  } else if(!fromChip){
+    navHistory = []; // fresh open (from grid or tree) starts a new navigation chain
+  }
+  currentId = id;
+  editing = false;
+  draft = null;
+  document.getElementById('flagNote').classList.remove('active');
+  refreshSheet();
+  document.getElementById('overlay').classList.add('active');
+  document.querySelector('.sheet').scrollTop = 0;
+}
+function goBack(){
+  if(!navHistory.length) return;
+  currentId = navHistory.pop();
+  editing = false;
+  draft = null;
+  refreshSheet();
+  document.querySelector('.sheet').scrollTop = 0;
+}
+document.getElementById('backBtn').onclick = goBack;
+document.getElementById('closeSheet').onclick = () => { document.getElementById('overlay').classList.remove('active'); navHistory = []; };
+document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay'){ e.currentTarget.classList.remove('active'); navHistory = []; } };
+document.getElementById('flagBtn').onclick = () => document.getElementById('flagNote').classList.toggle('active');
+
+document.getElementById('editToggle').onclick = () => {
+  if(!editing){
+    editing = true;
+    const p = BY_ID[currentId];
+    draft = JSON.parse(JSON.stringify(p));
+  }
+  refreshSheet();
+};
+
+document.getElementById('cancelEdit').onclick = () => {
+  editing = false;
+  draft = null;
+  refreshSheet();
+};
+
+// --- Delete person ---
+document.getElementById('deletePersonBtn').onclick = () => {
+  const p = BY_ID[currentId];
+  document.getElementById('deleteConfirmText').textContent =
+    `Delete "${p.name}"? Anyone connected to them as a parent, spouse, sibling, or child will have that link removed too.`;
+  document.getElementById('deleteConfirmOverlay').classList.add('active');
+};
+document.getElementById('cancelDelete').onclick = () => {
+  document.getElementById('deleteConfirmOverlay').classList.remove('active');
+};
+document.getElementById('deleteConfirmOverlay').onclick = (e) => {
+  if(e.target.id === 'deleteConfirmOverlay') e.currentTarget.classList.remove('active');
+};
+document.getElementById('confirmDelete').onclick = () => {
+  const idToDelete = currentId;
+  // strip the deleted person out of everyone else's relationship lists
+  PEOPLE.forEach(p => {
+    ['spouse','parents','siblings','children'].forEach(f => {
+      p[f] = p[f].filter(x => x !== idToDelete);
+    });
+  });
+  PEOPLE = PEOPLE.filter(p => p.id !== idToDelete);
+  rebuildIndex();
+  saveToLocalStorage();
+
+  document.getElementById('deleteConfirmOverlay').classList.remove('active');
+  document.getElementById('overlay').classList.remove('active');
+  editing = false;
+  draft = null;
+  currentId = null;
+  render(applyCurrentFilter());
+};
+
+document.getElementById('photoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!draft.photos) draft.photos = [];
+      draft.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0) refreshSheet();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+
+document.getElementById('saveEdit').onclick = () => {
+  const newName = document.getElementById('nameEditInput').value.trim();
+  if(newName) draft.name = newName;
+  draft.dates = document.getElementById('datesEditInput').value.trim();
+
+  // apply symmetric relationships: for spouse/parents/siblings/children, mirror the link on the other person
+  const orig = BY_ID[currentId];
+  function diffAdded(a,b){ return b.filter(x => !a.includes(x)); }
+  function diffRemoved(a,b){ return a.filter(x => !b.includes(x)); }
+
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents', siblings:'siblings' };
+  ['spouse','parents','siblings','children'].forEach(field => {
+    const added = diffAdded(orig[field]||[], draft[field]||[]);
+    const removed = diffRemoved(orig[field]||[], draft[field]||[]);
+    const mirrorField = mirrorMap[field];
+    added.forEach(otherId => {
+      const other = BY_ID[otherId];
+      if(other && !other[mirrorField].includes(currentId)) other[mirrorField].push(currentId);
+    });
+    removed.forEach(otherId => {
+      const other = BY_ID[otherId];
+      if(other) other[mirrorField] = other[mirrorField].filter(x => x !== currentId);
+    });
+  });
+
+  Object.assign(orig, draft);
+  editing = false;
+  draft = null;
+  saveToLocalStorage();
+  render(applyCurrentFilter());
+  refreshSheet();
+};
+
+function removeRelation(field, id){
+  draft[field] = draft[field].filter(x => x !== id);
+  refreshSheet();
+}
+
+function addRelation(field, id){
+  if(!draft[field].includes(id) && id !== currentId) draft[field].push(id);
+  document.getElementById('addSearch-'+field).classList.remove('active');
+  refreshSheet();
+}
+
+document.querySelectorAll('.add-search input').forEach(input => {
+  input.addEventListener('input', () => {
+    const field = input.dataset.field;
+    const mode = input.dataset.mode;
+    const q = input.value.trim();
+    const qLower = q.toLowerCase();
+    const resultsBox = document.querySelector('.add-results[data-field="'+field+'"][data-mode="'+(mode||'')+'"]') ||
+                        document.querySelector('.add-results[data-field="'+field+'"]:not([data-mode])');
+    resultsBox.innerHTML = '';
+    if(!q) return;
+    const excludeId = mode === 'new' ? -1 : currentId;
+    const matches = PEOPLE.filter(p => p.id !== excludeId && p.name.toLowerCase().includes(qLower)).slice(0,6);
+    matches.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'add-result-item';
+      item.textContent = p.name;
+      item.onclick = () => {
+        if(mode === 'new'){ addNewPersonRelation(field, p.id); }
+        else { addRelation(field, p.id); }
+        input.value=''; resultsBox.innerHTML='';
+      };
+      resultsBox.appendChild(item);
+    });
+    // Offer to create a brand-new person with this name, right here
+    const exactMatch = PEOPLE.some(p => p.name.toLowerCase() === qLower);
+    if(!exactMatch){
+      const createItem = document.createElement('div');
+      createItem.className = 'add-result-item create-new-item';
+      createItem.innerHTML = '&#10011; Create new person: <strong>"' + q + '"</strong>';
+      createItem.onclick = () => {
+        const newId = createStubPerson(q);
+        if(mode === 'new'){ addNewPersonRelation(field, newId); }
+        else { addRelation(field, newId); }
+        input.value=''; resultsBox.innerHTML='';
+      };
+      resultsBox.appendChild(createItem);
+    }
+  });
+});
+
+// Create a minimal new person on the fly (used when adding a relative that doesn't exist yet)
+function createStubPerson(name){
+  const maxId = PEOPLE.reduce((m,p) => Math.max(m,p.id), 0);
+  const newId = maxId + 1;
+  const stub = { id: newId, name: name, dates: '', photos: [], spouse: [], parents: [], siblings: [], children: [] };
+  PEOPLE.push(stub);
+  rebuildIndex();
+  saveToLocalStorage();
+  return newId;
+}
+
+// --- Add new person ---
+let newDraft = null;
+function blankDraft(){ return { id: null, name: '', dates: '', photos: [], spouse: [], parents: [], siblings: [], children: [] }; }
+
+function refreshNewSheet(){
+  renderPhotoGallery(document.getElementById('newPhotoPreview'), newDraft, true, true);
+  chipsFor(document.getElementById('newRelParents'), newDraft.parents, 'parents', true, 'new');
+  chipsFor(document.getElementById('newRelSpouse'), newDraft.spouse, 'spouse', true, 'new');
+  chipsFor(document.getElementById('newRelSiblings'), newDraft.siblings, 'siblings', true, 'new', newDraft);
+  chipsFor(document.getElementById('newRelChildren'), newDraft.children, 'children', true, 'new');
+  document.querySelectorAll('#newOverlay .add-search').forEach(b => b.classList.remove('active'));
+}
+
+document.getElementById('newPhotoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!newDraft.photos) newDraft.photos = [];
+      newDraft.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0) refreshNewSheet();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+
+function addNewPersonRelation(field, id){
+  if(!newDraft[field].includes(id)) newDraft[field].push(id);
+  document.getElementById('addSearch-new-'+field).classList.remove('active');
+  refreshNewSheet();
+}
+function removeNewPersonRelation(field, id){
+  newDraft[field] = newDraft[field].filter(x => x !== id);
+  refreshNewSheet();
+}
+
+document.getElementById('addPersonBtn').onclick = () => {
+  newDraft = blankDraft();
+  document.getElementById('newNameInput').value = '';
+  document.getElementById('newDatesInput').value = '';
+  refreshNewSheet();
+  document.getElementById('newOverlay').classList.add('active');
+};
+document.getElementById('closeNewSheet').onclick = () => document.getElementById('newOverlay').classList.remove('active');
+document.getElementById('cancelNewPerson').onclick = () => document.getElementById('newOverlay').classList.remove('active');
+document.getElementById('newOverlay').onclick = (e) => { if(e.target.id === 'newOverlay') e.currentTarget.classList.remove('active'); };
+
+document.getElementById('saveNewPerson').onclick = () => {
+  const name = document.getElementById('newNameInput').value.trim();
+  if(!name){ alert('Please enter a name.'); return; }
+  const dates = document.getElementById('newDatesInput').value.trim();
+  const maxId = PEOPLE.reduce((m,p) => Math.max(m,p.id), 0);
+  const newId = maxId + 1;
+  const newPerson = { id: newId, name, dates, photos: newDraft.photos || [],
+    spouse: [...newDraft.spouse], parents: [...newDraft.parents],
+    siblings: [...newDraft.siblings], children: [...newDraft.children] };
+
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents', siblings:'siblings' };
+  ['spouse','parents','siblings','children'].forEach(field => {
+    newPerson[field].forEach(otherId => {
+      const other = BY_ID[otherId];
+      const mirrorField = mirrorMap[field];
+      if(other && !other[mirrorField].includes(newId)) other[mirrorField].push(newId);
+    });
+  });
+
+  PEOPLE.push(newPerson);
+  rebuildIndex();
+  saveToLocalStorage();
+  document.getElementById('newOverlay').classList.remove('active');
+  render(applyCurrentFilter());
+};
+
+function saveToLocalStorage(){
+  try{ localStorage.setItem('familyTreeEdits_v2', JSON.stringify(PEOPLE)); }catch(e){}
+}
+
+function applyCurrentFilter(){
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const list = sortedList();
+  return q ? list.filter(p => p.name.toLowerCase().includes(q)) : list;
+}
+
+document.getElementById('search').addEventListener('input', () => render(applyCurrentFilter()));
+updateSortDirLabel();
+render(sortedList());
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('people-view').classList.toggle('active', target==='people');
+    document.getElementById('surnames-view').classList.toggle('active', target==='surnames');
+    document.getElementById('tree-view').classList.toggle('active', target==='tree');
+    if(target === 'surnames') showSurnameList();
+  };
+});
+
+// --- By Surname tab ---
+function parseSurname(name){
+  const parsed = parseDisplayName(name);
+  const words = parsed.main.trim().split(/\s+/);
+  return words[words.length-1] || '';
+}
+const SURNAME_JUNK = new Set(['1','2','3','Vrou','Seun','']);
+function buildSurnameMap(){
+  const map = {};
+  PEOPLE.forEach(p => {
+    const sn = parseSurname(p.name);
+    if(SURNAME_JUNK.has(sn)) return;
+    if(!map[sn]) map[sn] = [];
+    map[sn].push(p.id);
+  });
+  return map;
+}
+function rootAncestorFor(surname, surnameMap){
+  const ids = surnameMap[surname];
+  const roots = ids.filter(id => !BY_ID[id].parents.length);
+  const pool = roots.length ? roots : ids;
+  pool.sort((a,b)=>birthKeyFull(a)-birthKeyFull(b));
+  return pool[0];
+}
+function birthKeyFull(id){
+  const p = BY_ID[id];
+  const m = (p && p.dates || '').match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return 999999999;
+  let y = parseInt(m[3]); if(y<100) y += y<30?2000:1900;
+  return y*10000+parseInt(m[2])*100+parseInt(m[1]);
+}
+
+function showSurnameList(){
+  document.getElementById('surnames-back-row').style.display = 'none';
+  const surnameMap = buildSurnameMap();
+  const surnames = Object.keys(surnameMap).sort((a,b)=>a.localeCompare(b));
+  const body = document.getElementById('surnames-body');
+  body.innerHTML = '';
+  const list = document.createElement('div');
+  list.className = 'sn-list';
+  surnames.forEach(sn => {
+    const item = document.createElement('div');
+    item.className = 'sn-item';
+    const n = surnameMap[sn].length;
+    item.innerHTML = `<span>${sn}</span><span class="sn-count">${n} ${n===1?'person':'people'}</span>`;
+    item.onclick = () => showDescendantChart(sn, surnameMap);
+    list.appendChild(item);
+  });
+  body.appendChild(list);
+}
+
+function showDescendantChart(surname, surnameMap){
+  surnameMap = surnameMap || buildSurnameMap();
+  const rootId = rootAncestorFor(surname, surnameMap);
+
+  const gen = {};
+  const visited = new Set();
+  const queue = [[rootId, 0]];
+  while(queue.length){
+    const [pid, depth] = queue.shift();
+    if(visited.has(pid)) continue;
+    visited.add(pid);
+    gen[pid] = depth;
+    const p = BY_ID[pid];
+    if(!p) continue;
+    (p.spouse||[]).forEach(sid => { if(!visited.has(sid)){ visited.add(sid); gen[sid] = depth; } });
+    (p.children||[]).forEach(cid => queue.push([cid, depth+1]));
+  }
+  const ids = Object.keys(gen).map(Number);
+  const inSet = new Set(ids);
+
+  document.getElementById('surnames-back-row').style.display = 'block';
+  const body = document.getElementById('surnames-body');
+  body.innerHTML = '';
+  const heading = document.createElement('div');
+  heading.className = 'tier-label';
+  heading.style.marginBottom = '10px';
+  heading.textContent = surname + ' family \u2014 tap anyone to open their profile';
+  body.appendChild(heading);
+
+  // build family units within this descendant set
+  const visitedU = new Set();
+  const units = [];
+  const unitOf = {};
+  ids.forEach(id => {
+    if(visitedU.has(id)) return;
+    const p = BY_ID[id];
+    const members = [id];
+    (p.spouse||[]).forEach(sid => { if(inSet.has(sid) && !visitedU.has(sid)) members.push(sid); });
+    members.forEach(m => visitedU.add(m));
+    const u = {members, gen: gen[id]};
+    units.push(u);
+    members.forEach(m => unitOf[m] = u);
+  });
+  function childUnitsOf(unit){
+    const kids = [];
+    const seen = new Set();
+    unit.members.forEach(m => (BY_ID[m].children||[]).forEach(c => {
+      if(inSet.has(c) && !seen.has(c)){ seen.add(c); kids.push(c); }
+    }));
+    kids.sort((a,b)=>birthKeyFull(a)-birthKeyFull(b));
+    const result = []; const seenU = new Set();
+    kids.forEach(k => { const u = unitOf[k]; if(u && !seenU.has(u)){ seenU.add(u); result.push(u); } });
+    return result;
+  }
+  const placed = []; const placedSet = new Set();
+  function place(unit){
+    if(placedSet.has(unit)) return;
+    placedSet.add(unit); placed.push(unit);
+    childUnitsOf(unit).forEach(place);
+  }
+  place(unitOf[rootId]);
+  units.forEach(u => { if(!placedSet.has(u)) place(u); });
+
+  const BOX_W = 92, BOX_H = 92, GAP_WITHIN = 3, GAP_BETWEEN = 12, GEN_H = 118;
+  const px = {};
+  let cursor = 16;
+  placed.forEach(unit => {
+    const n = unit.members.length;
+    const y = unit.gen * GEN_H + 10;
+    unit.members.forEach((m, j) => { px[m] = [cursor + j*(BOX_W+GAP_WITHIN), y]; });
+    cursor += n*BOX_W + (n-1)*GAP_WITHIN + GAP_BETWEEN;
+  });
+  const maxX = Math.max(...Object.values(px).map(p=>p[0])) + BOX_W + 16;
+  const maxY = Math.max(...Object.values(px).map(p=>p[1])) + BOX_H + 16;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'dc-wrap';
+  const inner = document.createElement('div');
+  inner.style.cssText = `position:relative; width:${maxX}px; height:${maxY}px;`;
+
+  let svgLines = '';
+  const drawnSpouse = new Set();
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    (p.spouse||[]).forEach(sid => {
+      const key = [id,sid].sort().join('-');
+      if(drawnSpouse.has(key) || !inSet.has(sid)) return;
+      drawnSpouse.add(key);
+      const [x1,y1] = px[id], [x2,y2] = px[sid];
+      if(Math.abs(y1-y2) < 2){
+        const xa = Math.min(x1,x2)+BOX_W, xb = Math.max(x1,x2);
+        const yy = y1+BOX_H/2;
+        svgLines += `<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="#b3452f" stroke-width="2"/>`;
+      }
+    });
+  });
+  const drawnChild = new Set();
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    if(!p.parents.length) return;
+    const parentsInSet = p.parents.filter(x=>inSet.has(x));
+    if(!parentsInSet.length) return;
+    const key = parentsInSet.slice().sort().join('-') + '>' + id;
+    if(drawnChild.has(key)) return;
+    drawnChild.add(key);
+    const pxs = parentsInSet.map(x=>px[x][0]+BOX_W/2);
+    const pys = parentsInSet.map(x=>px[x][1]+BOX_H);
+    const pmx = pxs.reduce((a,b)=>a+b,0)/pxs.length;
+    const pmy = Math.max(...pys);
+    const [cx,cy] = px[id];
+    const cmx = cx+BOX_W/2;
+    const midY = pmy + (cy-pmy)/2;
+    svgLines += `<path d="M ${pmx} ${pmy} L ${pmx} ${midY} L ${cmx} ${midY} L ${cmx} ${cy}" fill="none" stroke="#c9b48a" stroke-width="1.5"/>`;
+  });
+
+  inner.innerHTML = `<svg width="${maxX}" height="${maxY}" style="position:absolute; top:0; left:0;">${svgLines}</svg>`;
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    const [x,y] = px[id];
+    const div = document.createElement('div');
+    div.className = 'dc-node' + (id === rootId ? ' dc-root' : '');
+    div.style.cssText = `left:${x}px; top:${y}px; width:${BOX_W}px;`;
+    const av = mainPhoto(p)
+      ? `<img class="dc-avatar" src="${mainPhoto(p)}" alt="">`
+      : `<div class="dc-avatar dc-placeholder">${initials(p.name)}</div>`;
+    const yr = birthKeyFull(id) === 999999999 ? '' : String(Math.floor(birthKeyFull(id)/10000));
+    div.innerHTML = `${av}<div class="dc-pname">${esc(parseDisplayName(p.name).main)}</div><div class="dc-pdates">${yr}</div>`;
+    div.onclick = () => openSheet(id);
+    inner.appendChild(div);
+  });
+
+  wrap.appendChild(inner);
+  body.appendChild(wrap);
+}
+document.getElementById('surnamesBackBtn').onclick = showSurnameList;
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+let scale = 1;
+const root = document.documentElement;
+document.getElementById('font-plus').onclick = () => { scale = Math.min(scale+0.15,1.9); root.style.setProperty('--font-scale', scale); };
+document.getElementById('font-minus').onclick = () => { scale = Math.max(scale-0.15,0.8); root.style.setProperty('--font-scale', scale); };
+
+// --- GitHub-connected publishing ---
+function getGhConfig(){
+  try{
+    const raw = localStorage.getItem('familyTreeGitHubConfig');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function setGhConfig(cfg){ localStorage.setItem('familyTreeGitHubConfig', JSON.stringify(cfg)); }
+function clearGhConfig(){ localStorage.removeItem('familyTreeGitHubConfig'); }
+function ghHeaders(token){
+  return { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' };
+}
+function updateSaveBtnLabel(){
+  const cfg = getGhConfig();
+  document.getElementById('saveFileBtn').innerHTML = cfg ? '&#128190; Publish' : '&#128190; Save';
+}
+function showPublishProgress(text){
+  const el = document.getElementById('publishProgress');
+  el.textContent = text;
+  el.classList.add('active');
+}
+function hidePublishProgress(delay){
+  const el = document.getElementById('publishProgress');
+  setTimeout(() => el.classList.remove('active'), delay||0);
+}
+async function ghGetFileSha(cfg, path){
+  const resp = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { headers: ghHeaders(cfg.token) });
+  if(resp.status === 404) return null;
+  if(!resp.ok) throw new Error('Could not check ' + path + ' (HTTP ' + resp.status + ')');
+  const data = await resp.json();
+  return data.sha;
+}
+async function ghPutFile(cfg, path, base64Content, message){
+  const sha = await ghGetFileSha(cfg, path);
+  const body = { message, content: base64Content };
+  if(sha) body.sha = sha;
+  const resp = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: Object.assign({'Content-Type':'application/json'}, ghHeaders(cfg.token)),
+    body: JSON.stringify(body)
+  });
+  if(!resp.ok){
+    const errBody = await resp.json().catch(()=>({}));
+    throw new Error(errBody.message || ('HTTP ' + resp.status));
+  }
+  return resp.json();
+}
+function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+async function publishToGitHub(){
+  const cfg = getGhConfig();
+  if(!cfg){
+    document.getElementById('settingsOverlay').classList.add('active');
+    return;
+  }
+  const btn = document.getElementById('saveFileBtn');
+  btn.disabled = true;
+  try{
+    let newPhotoCount = 0;
+    PEOPLE.forEach(p => (p.photos||[]).forEach(src => { if(src.startsWith('data:')) newPhotoCount++; }));
+    let uploaded = 0;
+    for(const p of PEOPLE){
+      if(!p.photos) continue;
+      for(let i=0;i<p.photos.length;i++){
+        const src = p.photos[i];
+        if(!src.startsWith('data:')) continue;
+        uploaded++;
+        showPublishProgress(`Uploading photo ${uploaded} of ${newPhotoCount}...`);
+        const base64Content = src.slice(src.indexOf(',')+1);
+        const filename = `${p.id}_${Date.now()}_${i}.jpg`;
+        const path = `photos/${filename}`;
+        await ghPutFile(cfg, path, base64Content, `Add photo for ${p.name}`);
+        p.photos[i] = path;
+      }
+    }
+    showPublishProgress('Publishing changes...');
+    await ghPutFile(cfg, 'data.json', utf8ToBase64(JSON.stringify(PEOPLE)), 'Update family tree data');
+    saveToLocalStorage();
+    showPublishProgress('Published! Everyone can now see your changes.');
+    hidePublishProgress(3000);
+  }catch(err){
+    showPublishProgress('Publish failed: ' + err.message);
+    hidePublishProgress(6000);
+  }finally{
+    btn.disabled = false;
+  }
+}
+document.getElementById('saveFileBtn').onclick = publishToGitHub;
+
+// --- Settings modal ---
+document.getElementById('settingsBtn').onclick = () => {
+  const cfg = getGhConfig();
+  document.getElementById('ghOwner').value = cfg ? cfg.owner : '';
+  document.getElementById('ghRepo').value = cfg ? cfg.repo : '';
+  document.getElementById('ghToken').value = cfg ? cfg.token : '';
+  document.getElementById('settingsStatus').innerHTML = cfg
+    ? '<div class="settings-status ok"><span class="connection-dot connected"></span>Connected to ' + cfg.owner + '/' + cfg.repo + '</div>'
+    : '<div class="settings-status info">Not connected yet &mdash; fill in the fields below and tap Connect.</div>';
+  document.getElementById('settingsOverlay').classList.add('active');
+};
+document.getElementById('settingsClose').onclick = () => document.getElementById('settingsOverlay').classList.remove('active');
+document.getElementById('settingsOverlay').onclick = (e) => { if(e.target.id==='settingsOverlay') e.currentTarget.classList.remove('active'); };
+
+document.getElementById('ghTestConnect').onclick = async () => {
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  const token = document.getElementById('ghToken').value.trim();
+  const statusEl = document.getElementById('settingsStatus');
+  if(!owner || !repo || !token){
+    statusEl.innerHTML = '<div class="settings-status err">Please fill in all three fields.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div class="settings-status info">Checking connection...</div>';
+  try{
+    const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders(token) });
+    if(resp.status === 401 || resp.status === 403){
+      statusEl.innerHTML = '<div class="settings-status err">That access token wasn\'t accepted. Double check you copied it correctly and it hasn\'t expired.</div>';
+      return;
+    }
+    if(resp.status === 404){
+      statusEl.innerHTML = '<div class="settings-status err">Could not find that repository. Check the username and repository name.</div>';
+      return;
+    }
+    if(!resp.ok){
+      statusEl.innerHTML = '<div class="settings-status err">Something went wrong (HTTP ' + resp.status + '). Please try again.</div>';
+      return;
+    }
+    setGhConfig({owner, repo, token});
+    statusEl.innerHTML = '<div class="settings-status ok"><span class="connection-dot connected"></span>Connected to ' + owner + '/' + repo + '</div>';
+    updateSaveBtnLabel();
+  }catch(err){
+    statusEl.innerHTML = '<div class="settings-status err">Could not reach GitHub. Check your internet connection.</div>';
+  }
+};
+document.getElementById('ghDisconnect').onclick = () => {
+  clearGhConfig();
+  document.getElementById('ghOwner').value = '';
+  document.getElementById('ghRepo').value = '';
+  document.getElementById('ghToken').value = '';
+  document.getElementById('settingsStatus').innerHTML = '<div class="settings-status info">Disconnected.</div>';
+  updateSaveBtnLabel();
+};
+updateSaveBtnLabel();
+</script>
+
+</body>
+</html>
