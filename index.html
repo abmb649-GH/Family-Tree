@@ -217,6 +217,7 @@
   .chip:active{ background:var(--line); }
   .chip .rm{ color:#b3452f; font-weight:900; padding-left:2px; }
   .no-data{ color:#b3a583; font-size:.9em; font-style:italic; }
+  .siblings-edit-hint{ width:100%; font-size:.78em; color:#a3946f; margin-top:6px; line-height:1.4; }
 
   .add-chip-btn{
     background:none; border:1.5px dashed var(--accent); border-radius:20px;
@@ -569,6 +570,7 @@
     <div class="rel-section">
       <div class="rel-title"><span>Siblings</span></div>
       <div class="rel-chips" id="newRelSiblings"></div>
+      <div class="siblings-edit-hint">Picking someone here sets this new person's Parents to match theirs &mdash; check the Parents section above once picked.</div>
       <div class="add-search" id="addSearch-new-siblings">
         <input type="text" placeholder="Search a name to add..." data-field="siblings" data-mode="new">
         <div class="add-results" data-field="siblings" data-mode="new"></div>
@@ -615,7 +617,36 @@ function dedupePeople(){
   });
   PEOPLE = Array.from(seen.values());
 }
-function rebuildIndex(){ dedupePeople(); Object.keys(BY_ID).forEach(k=>delete BY_ID[k]); PEOPLE.forEach(p => BY_ID[p.id] = p); }
+function recomputeSiblingsAndChildren(){
+  // Siblings and children are always derived from Parents -- never stored/edited
+  // independently -- so they can never drift out of sync the way this bug showed.
+  const byParentSet = {};
+  PEOPLE.forEach(p => {
+    p.siblings = [];
+    if(p.parents && p.parents.length){
+      const key = [...p.parents].slice().sort((a,b)=>a-b).join(',');
+      if(!byParentSet[key]) byParentSet[key] = [];
+      byParentSet[key].push(p.id);
+    }
+  });
+  Object.values(byParentSet).forEach(group => {
+    group.forEach(id => { BY_ID[id].siblings = group.filter(x => x !== id); });
+  });
+
+  PEOPLE.forEach(p => { p.children = []; });
+  PEOPLE.forEach(p => {
+    (p.parents||[]).forEach(parentId => {
+      const parent = BY_ID[parentId];
+      if(parent && !parent.children.includes(p.id)) parent.children.push(p.id);
+    });
+  });
+}
+function rebuildIndex(){
+  dedupePeople();
+  Object.keys(BY_ID).forEach(k=>delete BY_ID[k]);
+  PEOPLE.forEach(p => BY_ID[p.id] = p);
+  recomputeSiblingsAndChildren();
+}
 
 // The family site's data.json is always the source of truth -- fetched fresh on every
 // visit so everyone sees the latest published version, never a stale local copy.
@@ -851,20 +882,31 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       const avatarHtml = mainPhoto(person)
         ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
         : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
+      // siblings are derived from shared Parents, not individually removable here --
+      // "un-siblinging" someone means editing their Parents directly instead
+      const showRemove = editing && !item.isSelf && field !== 'siblings';
       chip.innerHTML = avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
-        (editing && !item.isSelf ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
+        (showRemove ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
       if(item.isSelf){
         // greyed out, unclickable -- just shows this person's place in birth order
       } else if(!editing){
         chip.onclick = () => openSheet(item.id, true);
-      } else {
+      } else if(showRemove){
         chip.querySelector('.rm').onclick = (e) => {
           e.stopPropagation();
           if(mode === 'new'){ removeNewPersonRelation(field, item.id); } else { removeRelation(field, item.id); }
         };
+      } else {
+        chip.onclick = () => openSheet(item.id, true);
       }
       container.appendChild(chip);
     });
+    if(editing && field === 'siblings'){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'Siblings are automatic \u2014 anyone who shares the same Parents shows up here. To remove someone, edit their Parents instead.';
+      container.appendChild(hint);
+    }
     if(editing){
       const addBtn = document.createElement('button');
       addBtn.className = 'add-chip-btn';
@@ -1138,13 +1180,15 @@ document.getElementById('saveEdit').onclick = () => {
   if(newName) draft.name = newName;
   draft.dates = document.getElementById('datesEditInput').value.trim();
 
-  // apply symmetric relationships: for spouse/parents/siblings/children, mirror the link on the other person
+  // apply symmetric relationships: for spouse/parents/children, mirror the link on the other
+  // person. Siblings are excluded here entirely -- they're derived automatically from
+  // Parents (see recomputeSiblingsAndChildren), never edited or mirrored directly.
   const orig = BY_ID[currentId];
   function diffAdded(a,b){ return b.filter(x => !a.includes(x)); }
   function diffRemoved(a,b){ return a.filter(x => !b.includes(x)); }
 
-  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents', siblings:'siblings' };
-  ['spouse','parents','siblings','children'].forEach(field => {
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents' };
+  ['spouse','parents','children'].forEach(field => {
     const added = diffAdded(orig[field]||[], draft[field]||[]);
     const removed = diffRemoved(orig[field]||[], draft[field]||[]);
     const mirrorField = mirrorMap[field];
@@ -1159,6 +1203,7 @@ document.getElementById('saveEdit').onclick = () => {
   });
 
   Object.assign(orig, draft);
+  rebuildIndex();
   editing = false;
   draft = null;
   saveToLocalStorage();
@@ -1174,6 +1219,36 @@ function removeRelation(field, id){
 function addRelation(field, id){
   if(!draft[field].includes(id) && id !== currentId) draft[field].push(id);
   document.getElementById('addSearch-'+field).classList.remove('active');
+  refreshSheet();
+}
+
+// Siblings aren't stored directly -- they're derived from shared Parents, so this
+// class of bug (siblings not mirroring to each other, or drifting from Parents)
+// can't happen anymore. "Adding a sibling" really means "give them the same parents."
+function addSiblingViaSharedParents(targetId){
+  const me = BY_ID[currentId];
+  const myParents = me.parents;
+  if(!myParents || !myParents.length){
+    alert("This person doesn't have parents recorded yet. Add and save their parents first, then siblings can be linked through them.");
+    return;
+  }
+  const target = BY_ID[targetId];
+  if(target.parents && target.parents.length){
+    const same = target.parents.length === myParents.length &&
+      target.parents.slice().sort().join(',') === myParents.slice().sort().join(',');
+    if(!same){
+      if(!confirm(target.name + " already has different parents recorded. Replace them with the same parents as this person, making them siblings?")) return;
+    }
+  }
+  target.parents = myParents.slice();
+  rebuildIndex();
+  saveToLocalStorage();
+  if(editing){
+    draft.siblings = BY_ID[currentId].siblings.slice();
+    draft.children = BY_ID[currentId].children.slice();
+  }
+  document.getElementById('addSearch-siblings').classList.remove('active');
+  render(applyCurrentFilter());
   refreshSheet();
 }
 
@@ -1195,6 +1270,7 @@ document.querySelectorAll('.add-search input').forEach(input => {
       item.textContent = p.name;
       item.onclick = () => {
         if(mode === 'new'){ addNewPersonRelation(field, p.id); }
+        else if(field === 'siblings'){ addSiblingViaSharedParents(p.id); }
         else { addRelation(field, p.id); }
         input.value=''; resultsBox.innerHTML='';
       };
@@ -1209,6 +1285,7 @@ document.querySelectorAll('.add-search input').forEach(input => {
       createItem.onclick = () => {
         const newId = createStubPerson(q);
         if(mode === 'new'){ addNewPersonRelation(field, newId); }
+        else if(field === 'siblings'){ addSiblingViaSharedParents(newId); }
         else { addRelation(field, newId); }
         input.value=''; resultsBox.innerHTML='';
       };
@@ -1259,6 +1336,17 @@ document.getElementById('newPhotoFileInput').addEventListener('change', (e) => {
 });
 
 function addNewPersonRelation(field, id){
+  if(field === 'siblings'){
+    const target = BY_ID[id];
+    if(!target.parents || !target.parents.length){
+      alert(target.name + " doesn't have parents recorded yet, so I can't set up a sibling link through them. Add their parents first, or set this new person's own Parents field directly instead.");
+      return;
+    }
+    newDraft.parents = target.parents.slice();
+    document.getElementById('addSearch-new-siblings').classList.remove('active');
+    refreshNewSheet();
+    return;
+  }
   if(!newDraft[field].includes(id)) newDraft[field].push(id);
   document.getElementById('addSearch-new-'+field).classList.remove('active');
   refreshNewSheet();
@@ -1287,10 +1375,11 @@ document.getElementById('saveNewPerson').onclick = () => {
   const newId = maxId + 1;
   const newPerson = { id: newId, name, dates, photos: newDraft.photos || [],
     spouse: [...newDraft.spouse], parents: [...newDraft.parents],
-    siblings: [...newDraft.siblings], children: [...newDraft.children] };
+    siblings: [], children: [...newDraft.children] };
 
-  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents', siblings:'siblings' };
-  ['spouse','parents','siblings','children'].forEach(field => {
+  // Siblings are excluded here too -- derived automatically from Parents once rebuildIndex() runs below.
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents' };
+  ['spouse','parents','children'].forEach(field => {
     newPerson[field].forEach(otherId => {
       const other = BY_ID[otherId];
       const mirrorField = mirrorMap[field];
