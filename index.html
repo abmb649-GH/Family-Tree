@@ -35,22 +35,29 @@
   }
   header{
     position:sticky;top:0;z-index:50;
-    background:var(--accent-dark);
-    color:#fff;
-    padding:14px 16px 10px;
-    box-shadow:0 2px 6px rgba(0,0,0,.15);
+    background:#f7f6f3;
+    color:var(--ink);
+    padding:10px 16px 8px;
+    border-bottom:1px solid #e0ddd6;
+    box-shadow:0 1px 4px rgba(0,0,0,.05);
+    overflow:hidden;
   }
-  .header-top-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
-  header h1{ margin:0; font-size:calc(1.5em); letter-spacing:.5px; }
+  .header-bg-pattern{
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    opacity:.55;
+  }
+  header > *{ position:relative; z-index:1; }
+  .header-top-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  header h1{ margin:0; font-size:1.22em; letter-spacing:.3px; color:var(--accent-dark); font-weight:800; }
   .header-btn-group{ display:flex; gap:8px; flex-shrink:0; }
   .save-header-btn{
-    flex-shrink:0; background:#fff; color:var(--accent-dark); border:none;
-    border-radius:10px; padding:8px 14px; font-size:.85em; font-weight:700; cursor:pointer;
+    flex-shrink:0; background:var(--accent-dark); color:#fff; border:1px solid var(--accent-dark);
+    border-radius:9px; padding:8px 14px; font-size:.85em; font-weight:700; cursor:pointer;
   }
-  .save-header-btn.pending{ background:#f4c65a; }
+  .save-header-btn.pending{ background:#c9962f; border-color:#c9962f; }
   .settings-header-btn{
-    flex-shrink:0; background:#fff2; color:#fff; border:1px solid #ffffff55;
-    border-radius:10px; padding:8px 12px; font-size:.85em; font-weight:700; cursor:pointer;
+    flex-shrink:0; background:#fff; color:var(--accent-dark); border:1px solid var(--line);
+    border-radius:9px; padding:8px 12px; font-size:.85em; font-weight:700; cursor:pointer;
   }
   .connection-dot{
     display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;
@@ -60,29 +67,12 @@
   .toolbar{display:flex; gap:8px; align-items:center;}
   .search-wrap{flex:1; position:relative;}
   #search{
-    width:100%; padding:12px 14px; font-size:calc(1em);
-    border-radius:12px; border:none; background:#fff; color:var(--ink);
+    width:100%; padding:11px 14px; font-size:calc(1em);
+    border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
   }
-  .textbtn{
-    background:#fff2; border:1px solid #ffffff55; color:#fff;
-    font-size:1.1em; font-weight:bold; padding:10px 14px;
-    border-radius:10px; cursor:pointer; min-width:44px;
-  }
-  .zoom-control{
-    display:flex; align-items:center; background:#fff2; border:1px solid #ffffff55;
-    border-radius:10px; overflow:hidden; flex-shrink:0;
-  }
-  .zoom-control button{
-    background:none; border:none; color:#fff; font-size:1.3em; font-weight:bold;
-    padding:9px 13px; cursor:pointer; line-height:1;
-  }
-  .zoom-control .zoom-icon{
-    font-size:1em; padding:0 4px; opacity:.85; border-left:1px solid #ffffff40;
-    border-right:1px solid #ffffff40; display:flex; align-items:center; height:1.4em;
-  }
-  .tabs{ display:flex; margin-top:10px; background:#00000022; border-radius:12px; overflow:hidden; }
-  .tab{ flex:1; text-align:center; padding:12px 6px; font-size:1em; font-weight:600; color:#fff; cursor:pointer; opacity:.75; }
-  .tab.active{ background:#fff; color:var(--accent-dark); opacity:1; }
+  .tabs{ display:flex; margin-top:9px; background:#fff; border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .tab{ flex:1; text-align:center; padding:10px 6px; font-size:.95em; font-weight:600; color:#9a8c6d; cursor:pointer; }
+  .tab.active{ background:var(--accent-dark); color:#fff; }
   main{padding:14px;}
   #people-count{ text-align:center; color:#8a7a56; margin-bottom:10px; font-size:.9em; }
   .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
@@ -278,7 +268,7 @@
   .save-bar .cancel-btn{ background:var(--bg); color:var(--accent-dark); border:1px solid var(--line); }
 
   .add-person-btn{
-    background:#fff2; border:1.5px solid #ffffff77; color:#fff;
+    background:#fff; border:1.5px solid var(--line); color:var(--accent-dark);
     font-size:.85em; font-weight:700; padding:9px 16px; border-radius:20px; cursor:pointer;
   }
 
@@ -352,8 +342,34 @@
 <body>
 
 <header>
+  <svg class="header-bg-pattern" width="100%" height="100%" preserveAspectRatio="none">
+    <defs>
+      <pattern id="familyDots" x="0" y="0" width="130" height="90" patternUnits="userSpaceOnUse">
+        <circle cx="20" cy="18" r="3.4" fill="#8a6d3b"/>
+        <circle cx="65" cy="10" r="3.4" fill="#8a6d3b"/>
+        <circle cx="20" cy="55" r="3.4" fill="#8a6d3b"/>
+        <circle cx="55" cy="60" r="3.4" fill="#8a6d3b"/>
+        <circle cx="100" cy="40" r="3.4" fill="#8a6d3b"/>
+        <circle cx="110" cy="78" r="3.4" fill="#8a6d3b"/>
+        <line x1="20" y1="18" x2="65" y2="10" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="20" y1="18" x2="20" y2="55" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="20" y1="55" x2="55" y2="60" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="65" y1="10" x2="100" y2="40" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="100" y1="40" x2="110" y2="78" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="55" y1="60" x2="100" y2="40" stroke="#8a6d3b" stroke-width="1"/>
+      </pattern>
+      <linearGradient id="fadeOut" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity="0.25"/>
+      </linearGradient>
+      <mask id="fadeMask">
+        <rect width="100%" height="100%" fill="url(#fadeOut)"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#familyDots)" mask="url(#fadeMask)"/>
+  </svg>
   <div class="header-top-row">
-    <h1>&#127795; Our Family Tree</h1>
+    <h1>Our Family Tree</h1>
     <div class="header-btn-group">
       <button class="settings-header-btn" id="settingsBtn" title="Connection settings">Setup</button>
       <button class="save-header-btn" id="saveFileBtn" title="Publish your changes">&#128190; Save</button>
@@ -361,13 +377,8 @@
   </div>
   <div class="toolbar">
     <div class="search-wrap"><input id="search" type="text" placeholder="Search a name..."></div>
-    <div class="zoom-control">
-      <button id="font-minus" title="Smaller text">&#8722;</button>
-      <span class="zoom-icon">&#128269;</span>
-      <button id="font-plus" title="Bigger text">&#43;</button>
-    </div>
   </div>
-  <div style="text-align:center; margin-top:10px;">
+  <div style="text-align:center; margin-top:8px;">
     <button class="add-person-btn" id="addPersonBtn">+ Add someone new</button>
   </div>
   <div class="tabs">
@@ -1511,11 +1522,6 @@ function esc(s){
   d.textContent = s;
   return d.innerHTML;
 }
-
-let scale = 1;
-const root = document.documentElement;
-document.getElementById('font-plus').onclick = () => { scale = Math.min(scale+0.15,1.9); root.style.setProperty('--font-scale', scale); };
-document.getElementById('font-minus').onclick = () => { scale = Math.max(scale-0.15,0.8); root.style.setProperty('--font-scale', scale); };
 
 // --- GitHub-connected publishing ---
 function getGhConfig(){
