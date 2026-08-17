@@ -66,7 +66,7 @@
   .connection-dot.connected{ background:#4a8f3c; }
   .toolbar{display:flex; gap:8px; align-items:center;}
   .search-wrap{flex:1; position:relative;}
-  #search{
+  #peopleSearchBox{
     width:100%; padding:11px 14px; font-size:calc(1em);
     border-radius:10px; border:1px solid var(--line); background:#fff; color:var(--ink);
   }
@@ -377,7 +377,7 @@
     </div>
   </div>
   <div class="toolbar">
-    <div class="search-wrap"><input id="search" name="q_no_autofill" type="text" placeholder="Search a name..." autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-form-type="other"></div>
+    <div class="search-wrap"><input id="peopleSearchBox" type="text" placeholder="Search a name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
   </div>
   <div style="text-align:center; margin-top:8px; display:none;">
     <button class="add-person-btn" id="addPersonBtn">+ Add someone new</button>
@@ -1428,12 +1428,15 @@ function saveToLocalStorage(){
 }
 
 function applyCurrentFilter(){
-  const q = document.getElementById('search').value.trim().toLowerCase();
+  const q = document.getElementById('peopleSearchBox').value.trim().toLowerCase();
   const list = sortedList();
   return q ? list.filter(p => p.name.toLowerCase().includes(q)) : list;
 }
 
-document.getElementById('search').addEventListener('input', () => render(applyCurrentFilter()));
+document.getElementById('peopleSearchBox').addEventListener('input', () => render(applyCurrentFilter()));
+// Defensive: explicitly clear on load in case the browser tries to restore some old
+// remembered value into this field before the person has typed anything themselves.
+document.getElementById('peopleSearchBox').value = '';
 updateSortDirLabel();
 render(sortedList());
 
