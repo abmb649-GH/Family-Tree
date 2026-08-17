@@ -437,8 +437,10 @@
     <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
     <div class="dates-big" id="sheetDates"></div>
 
-    <div style="text-align:center;">
+    <div style="text-align:center; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
       <div class="edit-toggle" id="editToggle">&#9998; Edit this person</div>
+      <label class="edit-toggle" for="quickPhotoFileInput">&#128247; Add photos</label>
+      <input type="file" id="quickPhotoFileInput" accept="image/*" multiple style="display:none;">
     </div>
 
     <div class="rel-section">
@@ -774,7 +776,7 @@ function attachPhotoDropZone(card, personId){
   });
 }
 
-function addPhotosToPerson(personId, files){
+function addPhotosToPerson(personId, files, onDone){
   const person = BY_ID[personId];
   if(!person) return;
   let remaining = files.length;
@@ -787,6 +789,7 @@ function addPhotosToPerson(personId, files){
       if(remaining === 0){
         saveToLocalStorage();
         render(applyCurrentFilter());
+        if(onDone) onDone();
       }
     };
     reader.readAsDataURL(file);
@@ -1172,6 +1175,30 @@ document.getElementById('photoFileInput').addEventListener('change', (e) => {
     };
     reader.readAsDataURL(file);
   });
+  e.target.value = '';
+});
+
+// Quick "Add photos" button next to Edit -- works without entering edit mode at all.
+// Applies straight to the real record (like the drag-and-drop feature), or into the
+// draft if the person happens to already be mid-edit, so nothing gets overwritten.
+document.getElementById('quickPhotoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+  if(!files.length || currentId == null){ e.target.value=''; return; }
+  if(editing && draft){
+    let remaining = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if(!draft.photos) draft.photos = [];
+        draft.photos.push(reader.result);
+        remaining--;
+        if(remaining === 0) refreshSheet();
+      };
+      reader.readAsDataURL(file);
+    });
+  } else {
+    addPhotosToPerson(currentId, files, refreshSheet);
+  }
   e.target.value = '';
 });
 
