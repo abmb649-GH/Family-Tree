@@ -371,7 +371,7 @@
   </svg>
   <div class="header-top-row">
     <h1>Our Family Tree</h1>
-    <div class="header-btn-group">
+    <div class="header-btn-group" style="display:none;">
       <button class="settings-header-btn" id="settingsBtn" title="Connection settings">Setup</button>
       <button class="save-header-btn" id="saveFileBtn" title="Publish your changes">&#128190; Save</button>
     </div>
@@ -379,7 +379,7 @@
   <div class="toolbar">
     <div class="search-wrap"><input id="search" type="text" placeholder="Search a name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
   </div>
-  <div style="text-align:center; margin-top:8px;">
+  <div style="text-align:center; margin-top:8px; display:none;">
     <button class="add-person-btn" id="addPersonBtn">+ Add someone new</button>
   </div>
   <div class="tabs">
@@ -401,9 +401,7 @@
       <button id="sortDirBtn" class="sort-dir-btn" title="Toggle ascending/descending">&#8593; A&ndash;Z</button>
     </div>
     <div id="people-count"></div>
-    <div class="drop-hint">Tip: drag and drop a photo onto anyone's card to add it to their profile</div>
     <div class="grid" id="grid"></div>
-    <div class="verify-banner">Parents / siblings / children are a best guess based on the chart layout. Open anyone's page, tap "Edit", and fix names or connections directly &mdash; then tap "Save" top right to save your changes.</div>
   </div>
 
   <div id="surnames-view">
@@ -437,7 +435,7 @@
     <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
     <div class="dates-big" id="sheetDates"></div>
 
-    <div style="text-align:center; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+    <div style="text-align:center; display:none; gap:8px; justify-content:center; flex-wrap:wrap;">
       <div class="edit-toggle" id="editToggle">&#9998; Edit this person</div>
       <label class="edit-toggle" for="quickPhotoFileInput">&#128247; Add photos</label>
       <input type="file" id="quickPhotoFileInput" accept="image/*" multiple style="display:none;">
@@ -483,7 +481,7 @@
     <button class="delete-person-btn" id="deletePersonBtn" style="display:none;">&#128465; Delete this person</button>
 
     <button class="flag-btn" id="flagBtn">Something wrong on this page?</button>
-    <div class="flag-note" id="flagNote">Tap "Edit this person" above to fix the name or connections yourself &mdash; or tell whoever shared this file what's wrong so they can fix it.</div>
+    <div class="flag-note" id="flagNote">Something not quite right? Let whoever shared this with you know, so they can fix it.</div>
   </div>
 </div>
 
@@ -595,6 +593,7 @@
 </div>
 
 <script type="module">
+const READ_ONLY = true; // this is the family-facing page -- no edits here ever persist anywhere, so nothing is allowed to mutate data
 let PEOPLE = [];
 const BY_ID = {};
 function normalizePerson(p){
@@ -777,6 +776,7 @@ function attachPhotoDropZone(card, personId){
 }
 
 function addPhotosToPerson(personId, files, onDone){
+  if(READ_ONLY) return;
   const person = BY_ID[personId];
   if(!person) return;
   let remaining = files.length;
@@ -800,7 +800,7 @@ function addPhotosToPerson(personId, files, onDone){
 // whoever's profile is currently showing -- goes into the draft while editing (applied
 // on Save, like the rest of the edit form), or straight onto the real record otherwise.
 function handleSheetPhotoDrop(files){
-  if(currentId == null) return;
+  if(READ_ONLY || currentId == null) return;
   let remaining = files.length;
   files.forEach(file => {
     const reader = new FileReader();
@@ -1114,6 +1114,7 @@ document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overla
 document.getElementById('flagBtn').onclick = () => document.getElementById('flagNote').classList.toggle('active');
 
 document.getElementById('editToggle').onclick = () => {
+  if(READ_ONLY) return;
   if(!editing){
     editing = true;
     const p = BY_ID[currentId];
@@ -1384,6 +1385,7 @@ function removeNewPersonRelation(field, id){
 }
 
 document.getElementById('addPersonBtn').onclick = () => {
+  if(READ_ONLY) return;
   newDraft = blankDraft();
   document.getElementById('newNameInput').value = '';
   document.getElementById('newDatesInput').value = '';
@@ -1690,6 +1692,7 @@ function utf8ToBase64(str){
   return btoa(unescape(encodeURIComponent(str)));
 }
 async function publishToGitHub(){
+  if(READ_ONLY) return;
   const cfg = getGhConfig();
   if(!cfg){
     document.getElementById('settingsOverlay').classList.add('active');
