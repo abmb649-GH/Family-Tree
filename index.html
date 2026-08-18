@@ -1431,7 +1431,22 @@ function applyCurrentFilter(){
   return q ? list.filter(p => p.name.toLowerCase().includes(q)) : list;
 }
 
-document.getElementById('peopleSearchBox').addEventListener('input', () => render(applyCurrentFilter()));
+// Chrome (and some other browsers) can inject a saved/autofilled value into this field
+// on its own, without the person actually typing -- we saw it happen with the repo name
+// "Family-Tree" appearing unprompted. A real keystroke always fires 'keydown' immediately
+// before the resulting 'input' event; autofill does not. So: only trust an 'input' event
+// if a real keydown happened right before it, and silently reject/clear anything else.
+let lastSearchKeydown = 0;
+document.getElementById('peopleSearchBox').addEventListener('keydown', () => { lastSearchKeydown = Date.now(); });
+document.getElementById('peopleSearchBox').addEventListener('input', (e) => {
+  const genuineTyping = (Date.now() - lastSearchKeydown) < 800;
+  if(!genuineTyping && e.target.value.trim() !== ''){
+    e.target.value = '';
+    render(applyCurrentFilter());
+    return;
+  }
+  render(applyCurrentFilter());
+});
 // Defensive: explicitly clear on load in case the browser tries to restore some old
 // remembered value into this field before the person has typed anything themselves.
 document.getElementById('peopleSearchBox').value = '';
