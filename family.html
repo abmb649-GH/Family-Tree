@@ -354,6 +354,12 @@
   }
 
   footer{ text-align:center; color:#a3947a; font-size:.8em; padding:24px 10px 40px; }
+  /* In landscape, phones have a lot of extra width but not much extra height --
+     shrink the minimum card size just for landscape so an extra column fits,
+     without touching how things look in portrait (the primary use case). */
+  @media (orientation: landscape){
+    .grid{ grid-template-columns:repeat(auto-fill, minmax(115px,1fr)); }
+  }
 </style>
 </head>
 <body>
