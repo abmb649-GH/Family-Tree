@@ -712,6 +712,12 @@ try{
 }
 rebuildIndex();
 
+// A snapshot of PEOPLE exactly as loaded/last published -- used both to write a
+// descriptive commit message (what actually changed since then) and to detect if the
+// live site has been changed by someone else since this tab last knew about it.
+let originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
+let knownDataSha = null;
+
 // Detect unpublished local edits from a previous visit (e.g. a connection failure while
 // publishing, or the tab reloading mid-edit) that never made it into data.json. This is
 // checked now, right after loading fresh data, but only acted on later once all the
@@ -1864,6 +1870,43 @@ async function ghPutFile(cfg, path, base64Content, message){
 function utf8ToBase64(str){
   return btoa(unescape(encodeURIComponent(str)));
 }
+
+// Builds a plain-language summary of what actually changed since the last known-good
+// snapshot, for use as the commit message -- so GitHub's own history becomes a genuinely
+// readable changelog ("Riaan Burger: dates updated") instead of a generic one-liner.
+function summarizeChanges(before, after){
+  const beforeById = {}; before.forEach(p => beforeById[p.id] = p);
+  const afterById = {}; after.forEach(p => afterById[p.id] = p);
+  const notes = [];
+
+  after.forEach(p => {
+    const prev = beforeById[p.id];
+    if(!prev){ notes.push(`Added ${p.name}`); return; }
+    const changed = [];
+    if(prev.name !== p.name) changed.push('name');
+    if((prev.dates||'') !== (p.dates||'')) changed.push('dates');
+    if((prev.photos||[]).length !== (p.photos||[]).length) changed.push('photos');
+    if(JSON.stringify(prev.parents) !== JSON.stringify(p.parents)) changed.push('parents');
+    if(JSON.stringify(prev.spouse) !== JSON.stringify(p.spouse)) changed.push('spouse');
+    if(JSON.stringify(prev.children) !== JSON.stringify(p.children)) changed.push('children');
+    if(changed.length) notes.push(`${p.name}: ${changed.join(', ')} updated`);
+  });
+  before.forEach(p => { if(!afterById[p.id]) notes.push(`Removed ${p.name}`); });
+
+  if(!notes.length) return 'Update family tree data';
+  const shown = notes.slice(0, 6).join('; ');
+  return notes.length > 6 ? `${shown} (+${notes.length-6} more)` : shown;
+}
+
+// Checks whether the live data.json has changed since this tab last knew about it --
+// e.g. from another device, another tab, or someone else entirely. Returns the current
+// sha either way; `stale` is only meaningful once we actually have a prior sha to compare.
+async function checkForStaleData(cfg){
+  const currentSha = await ghGetFileSha(cfg, 'data.json');
+  const stale = knownDataSha !== null && currentSha !== null && currentSha !== knownDataSha;
+  return { stale, currentSha };
+}
+
 async function publishToGitHub(){
   const cfg = getGhConfig();
   if(!cfg){
@@ -1873,6 +1916,24 @@ async function publishToGitHub(){
   const btn = document.getElementById('saveFileBtn');
   btn.disabled = true;
   try{
+    showPublishProgress('Checking for other changes...');
+    const { stale, currentSha } = await checkForStaleData(cfg);
+    if(stale){
+      hidePublishProgress(0);
+      const proceed = confirm(
+        'The live family tree has changed since you opened this page -- probably from ' +
+        'another device or tab. Publishing now could overwrite that work.\n\n' +
+        'Tap Cancel to reload and see the latest version first (recommended), or OK to ' +
+        'publish your changes anyway.'
+      );
+      if(!proceed){
+        showPublishProgress('Not published. Reload the page to see the latest version.');
+        hidePublishProgress(6000);
+        btn.disabled = false;
+        return;
+      }
+    }
+
     let newPhotoCount = 0;
     PEOPLE.forEach(p => (p.photos||[]).forEach(src => { if(src.startsWith('data:')) newPhotoCount++; }));
     let uploaded = 0;
@@ -1891,7 +1952,10 @@ async function publishToGitHub(){
       }
     }
     showPublishProgress('Publishing changes...');
-    await ghPutFile(cfg, 'data.json', utf8ToBase64(JSON.stringify(PEOPLE)), 'Update family tree data');
+    const commitMessage = summarizeChanges(originalPeopleSnapshot, PEOPLE);
+    const result = await ghPutFile(cfg, 'data.json', utf8ToBase64(JSON.stringify(PEOPLE)), commitMessage);
+    knownDataSha = result && result.content ? result.content.sha : null;
+    originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
     saveToLocalStorage();
     showPublishProgress('Published! Everyone can now see your changes.');
     hidePublishProgress(3000);
