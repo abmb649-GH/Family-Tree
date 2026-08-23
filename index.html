@@ -32,6 +32,7 @@
     font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
     font-size:calc(17px * var(--font-scale));
     -webkit-text-size-adjust:100%;
+    overscroll-behavior:none;
   }
   header{
     position:sticky;top:0;z-index:50;
@@ -92,7 +93,7 @@
   main{padding:14px;}
   #people-count{ text-align:center; color:#8a7a56; margin-bottom:10px; font-size:.9em; }
   .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
-  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:12px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--card-min-width, 140px),1fr)); gap:12px; touch-action:pan-y; }
   .card{
     background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
     padding:12px 8px 14px; text-align:center; cursor:pointer;
@@ -119,7 +120,7 @@
   #tree-view.active{display:block;}
   #people-view.active{display:block;}
   #people-view{display:none;}
-  .tree-scroll{ overflow:auto; border:1px solid var(--line); border-radius:12px; background:#fff; -webkit-overflow-scrolling:touch; }
+  .tree-scroll{ overflow:auto; overscroll-behavior:contain; border:1px solid var(--line); border-radius:12px; background:#fff; -webkit-overflow-scrolling:touch; }
   .tree-scroll img{ display:block; width:2200px; max-width:none; }
   .zoom-tip{ text-align:center; margin-bottom:10px; color:#6b5c40; font-size:.95em; }
 
@@ -136,7 +137,7 @@
     display:flex; justify-content:space-between; align-items:center; cursor:pointer;
   }
   .sn-count{ font-weight:500; font-size:.78em; color:#a3946f; }
-  .dc-wrap{ overflow:auto; -webkit-overflow-scrolling:touch; padding:6px 0 24px; }
+  .dc-wrap{ overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:6px 0 24px; }
   .dc-person{
     background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
     padding:6px 6px; text-align:center; cursor:pointer; width:92px; flex-shrink:0;
@@ -180,11 +181,12 @@
   }
   .publish-progress.active{ display:block; }
   .overlay.active{display:flex;}
-  .sheet{ background:#fff; width:100%; max-width:520px; border-radius:22px; padding:22px 20px calc(30px + env(safe-area-inset-bottom, 0px)); text-align:center; max-height:76vh; max-height:76dvh; overflow:auto; transition:box-shadow .15s ease, background .15s ease; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
-  .sheet::-webkit-scrollbar{ width:8px; }
-  .sheet::-webkit-scrollbar-track{ background:transparent; margin:22px 0; }
-  .sheet::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
-  .sheet::-webkit-scrollbar-thumb:hover{ background:var(--accent); }
+  .sheet{ background:#fff; width:100%; max-width:520px; border-radius:22px; overflow:hidden; transition:box-shadow .15s ease, background .15s ease; }
+  .sheet-inner{ padding:22px 20px calc(30px + env(safe-area-inset-bottom, 0px)); text-align:center; max-height:76vh; max-height:76dvh; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+  .sheet-inner::-webkit-scrollbar{ width:8px; }
+  .sheet-inner::-webkit-scrollbar-track{ background:transparent; }
+  .sheet-inner::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+  .sheet-inner::-webkit-scrollbar-thumb:hover{ background:var(--accent); }
   .sheet.sheet-drag-over{ background:#fff8ea; box-shadow:inset 0 0 0 3px var(--accent); }
   .sheet-topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
   .sheet .close{ background:var(--line); border:none; border-radius:50%; width:38px;height:38px; font-size:1.2em; color:var(--accent-dark); cursor:pointer; margin-left:auto; }
@@ -256,14 +258,18 @@
   .create-new-item strong{ font-weight:800; }
   .add-result-item:active{ background:var(--bg); }
 
-  .flag-btn{ margin-top:24px; width:100%; padding:12px; border-radius:12px; border:1px dashed var(--line); background:none; color:#a3946f; font-size:.85em; cursor:pointer; }
+  .review-nav{ margin-top:24px; display:flex; gap:8px; }
+  .review-nav-btn{
+    flex:1; padding:12px 6px; border-radius:12px; border:1px solid var(--line);
+    background:#fff; color:var(--accent-dark); font-size:.85em; font-weight:700; cursor:pointer;
+  }
+  .review-nav-btn:disabled{ opacity:.4; cursor:default; }
+  .review-nav-btn#donePersonBtn{ background:var(--accent-dark); color:#fff; border-color:var(--accent-dark); }
   .delete-person-btn{
     margin-top:14px; width:100%; padding:12px; border-radius:12px;
     border:1px solid #e0b3a3; background:#fbf0ec; color:#b3452f;
     font-size:.9em; font-weight:700; cursor:pointer;
   }
-  .flag-note{ margin-top:10px; font-size:.85em; color:#7a6a48; background:#fbf6ec; border-radius:10px; padding:10px; display:none; text-align:left; }
-  .flag-note.active{display:block;}
 
   .verify-banner{ background:#fff6e0; border:1px solid #e9d9a8; color:#7a6323; border-radius:12px; padding:10px 14px; font-size:.88em; margin-bottom:14px; }
 
@@ -347,9 +353,10 @@
   footer{ text-align:center; color:#a3947a; font-size:.8em; padding:24px 10px 40px; }
   /* In landscape, phones have a lot of extra width but not much extra height --
      shrink the minimum card size just for landscape so an extra column fits,
-     without touching how things look in portrait (the primary use case). */
+     without touching how things look in portrait (the primary use case). Pinch-zoom
+     (see JS) sets --card-min-width directly and always takes precedence over this. */
   @media (orientation: landscape){
-    .grid{ grid-template-columns:repeat(auto-fill, minmax(115px,1fr)); }
+    :root{ --card-min-width: 115px; }
   }
 </style>
 </head>
@@ -434,6 +441,7 @@
 
 <div class="overlay" id="overlay">
   <div class="sheet">
+   <div class="sheet-inner">
     <div class="sheet-topbar">
       <button class="back-btn" id="backBtn" style="display:none;">&#8592;</button>
       <button class="close" id="closeSheet">&#10005;</button>
@@ -493,13 +501,18 @@
     </div>
     <button class="delete-person-btn" id="deletePersonBtn" style="display:none;">&#128465; Delete this person</button>
 
-    <button class="flag-btn" id="flagBtn">Something wrong on this page?</button>
-    <div class="flag-note" id="flagNote">Tap "Edit this person" above to fix the name or connections yourself &mdash; or tell whoever shared this file what's wrong so they can fix it.</div>
+    <div class="review-nav">
+      <button class="review-nav-btn" id="prevPersonBtn">&#8592; Previous</button>
+      <button class="review-nav-btn" id="donePersonBtn">Done</button>
+      <button class="review-nav-btn" id="nextPersonBtn">Next &#8594;</button>
+    </div>
+   </div>
   </div>
 </div>
 
 <div class="overlay" id="deleteConfirmOverlay">
   <div class="sheet" style="max-width:420px;">
+   <div class="sheet-inner">
     <h2 style="margin-top:0;">Delete this person?</h2>
     <p id="deleteConfirmText" style="color:var(--ink); line-height:1.5;"></p>
     <p style="color:#8a7a56; font-size:.9em;">This removes them completely and clears them from anyone else's parents, spouse, siblings, or children. This can't be undone.</p>
@@ -507,6 +520,7 @@
       <button class="cancel-btn" id="cancelDelete">Cancel</button>
       <button class="save-btn" id="confirmDelete" style="background:#b3452f;">Delete</button>
     </div>
+   </div>
   </div>
 </div>
 
@@ -519,8 +533,26 @@
 
 <div class="publish-progress" id="publishProgress"></div>
 
+<div class="overlay" id="recoveryOverlay">
+  <div class="sheet" style="max-width:440px;">
+   <div class="sheet-inner">
+    <h2 style="margin-top:0;">Unpublished changes found</h2>
+    <p style="color:var(--ink); line-height:1.5; text-align:left;">
+      It looks like some edits from a previous visit never made it online &mdash;
+      possibly from a connection issue while publishing.
+    </p>
+    <p id="recoveryDetail" style="color:#8a7a56; font-size:.88em; text-align:left;"></p>
+    <div class="save-bar active">
+      <button class="cancel-btn" id="discardRecovery">Discard</button>
+      <button class="save-btn" id="restoreRecovery">Restore &amp; review</button>
+    </div>
+   </div>
+  </div>
+</div>
+
 <div class="overlay" id="settingsOverlay">
   <div class="sheet" style="max-width:440px;">
+   <div class="sheet-inner">
     <div class="sheet-topbar"><button class="close" id="settingsClose">&#10005;</button></div>
     <h2 style="margin-top:0;">Family site connection</h2>
     <p style="color:#8a7a56; font-size:.88em; text-align:left; line-height:1.5;">
@@ -545,11 +577,13 @@
       <button class="cancel-btn" id="ghDisconnect">Disconnect</button>
       <button class="save-btn" id="ghTestConnect">Connect</button>
     </div>
+   </div>
   </div>
 </div>
 
 <div class="overlay" id="newOverlay">
   <div class="sheet">
+   <div class="sheet-inner">
     <button class="close" id="closeNewSheet">&#10005;</button>
     <h2 style="margin-top:0;">Add someone new</h2>
 
@@ -602,6 +636,7 @@
       <button class="cancel-btn" id="cancelNewPerson">Cancel</button>
       <button class="save-btn" id="saveNewPerson">Add person</button>
     </div>
+   </div>
   </div>
 </div>
 
@@ -676,6 +711,49 @@ try{
   throw err;
 }
 rebuildIndex();
+
+// Detect unpublished local edits from a previous visit (e.g. a connection failure while
+// publishing, or the tab reloading mid-edit) that never made it into data.json. This is
+// checked now, right after loading fresh data, but only acted on later once all the
+// helper functions below exist. Checked in two layers: an in-progress single-person
+// edit (more recent, more granular) takes priority over the coarser "fully saved but
+// never published" cache.
+let pendingActiveDraft = null;
+let pendingNewDraft = null;
+let pendingRecovery = null;
+try{
+  const activeRaw = localStorage.getItem('familyTreeActiveDraft');
+  if(activeRaw){
+    const parsed = JSON.parse(activeRaw);
+    // ignore anything older than 7 days -- almost certainly abandoned, not worth prompting about
+    if(parsed && parsed.draft && (Date.now() - (parsed.ts||0)) < 7*24*60*60*1000){
+      pendingActiveDraft = parsed;
+    }
+  }
+}catch(e){}
+try{
+  const newRaw = localStorage.getItem('familyTreeNewDraft');
+  if(newRaw){
+    const parsed = JSON.parse(newRaw);
+    const hasContent = parsed && parsed.newDraft && (
+      (parsed.newDraft.name||'').trim() || (parsed.newDraft.dates||'').trim() ||
+      (parsed.newDraft.photos||[]).length || (parsed.newDraft.parents||[]).length ||
+      (parsed.newDraft.spouse||[]).length || (parsed.newDraft.children||[]).length
+    );
+    if(hasContent && (Date.now() - (parsed.ts||0)) < 7*24*60*60*1000){
+      pendingNewDraft = parsed;
+    }
+  }
+}catch(e){}
+try{
+  const cachedRaw = localStorage.getItem('familyTreeEdits_v2');
+  if(cachedRaw){
+    const cachedPeople = JSON.parse(cachedRaw);
+    if(Array.isArray(cachedPeople) && JSON.stringify(cachedPeople) !== JSON.stringify(PEOPLE)){
+      pendingRecovery = cachedPeople;
+    }
+  }
+}catch(e){}
 
 function initials(name){
   return name.replace(/\(.*?\)/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
@@ -1008,7 +1086,20 @@ function refreshSheet(){
   document.getElementById('editToggle').textContent = editing ? 'Editing...' : '\u270E Edit this person';
   document.getElementById('saveBar').classList.toggle('active', editing);
   document.getElementById('deletePersonBtn').style.display = editing ? 'block' : 'none';
+  document.querySelector('.review-nav').style.display = editing ? 'none' : 'flex';
+  updateReviewNavButtons();
   document.querySelectorAll('.add-search').forEach(b => b.classList.remove('active'));
+  if(editing) persistActiveDraft();
+}
+
+// Continuously mirrors the in-progress edit to this phone's local storage, separately
+// from the "already saved" cache -- so even changes never confirmed with that person's
+// own "Save changes" button survive a reload and can be offered back.
+function persistActiveDraft(){
+  try{ localStorage.setItem('familyTreeActiveDraft', JSON.stringify({personId: currentId, draft, ts: Date.now()})); }catch(e){}
+}
+function clearActiveDraft(){
+  try{ localStorage.removeItem('familyTreeActiveDraft'); }catch(e){}
 }
 
 // Renders either a single big avatar (view mode) or a scrollable gallery with
@@ -1112,10 +1203,9 @@ function openSheet(id, fromChip){
   currentId = id;
   editing = false;
   draft = null;
-  document.getElementById('flagNote').classList.remove('active');
   refreshSheet();
   document.getElementById('overlay').classList.add('active');
-  document.querySelector('.sheet').scrollTop = 0;
+  document.querySelector('.sheet-inner').scrollTop = 0;
 }
 function goBack(){
   if(!navHistory.length) return;
@@ -1123,12 +1213,35 @@ function goBack(){
   editing = false;
   draft = null;
   refreshSheet();
-  document.querySelector('.sheet').scrollTop = 0;
+  document.querySelector('.sheet-inner').scrollTop = 0;
 }
 document.getElementById('backBtn').onclick = goBack;
-document.getElementById('closeSheet').onclick = () => { document.getElementById('overlay').classList.remove('active'); navHistory = []; };
-document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay'){ e.currentTarget.classList.remove('active'); navHistory = []; } };
-document.getElementById('flagBtn').onclick = () => document.getElementById('flagNote').classList.toggle('active');
+document.getElementById('closeSheet').onclick = () => { document.getElementById('overlay').classList.remove('active'); navHistory = []; if(editing) clearActiveDraft(); };
+document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay'){ e.currentTarget.classList.remove('active'); navHistory = []; if(editing) clearActiveDraft(); } };
+
+// Lets someone work through the whole list in order, reviewing/fixing each person in turn
+// without needing to close and reopen from the grid every time.
+function updateReviewNavButtons(){
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  document.getElementById('prevPersonBtn').disabled = idx <= 0;
+  document.getElementById('nextPersonBtn').disabled = (idx === -1) || (idx >= list.length - 1);
+}
+document.getElementById('prevPersonBtn').onclick = () => {
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  if(idx > 0) openSheet(list[idx-1].id);
+};
+document.getElementById('nextPersonBtn').onclick = () => {
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  if(idx !== -1 && idx < list.length - 1) openSheet(list[idx+1].id);
+};
+document.getElementById('donePersonBtn').onclick = () => {
+  document.getElementById('overlay').classList.remove('active');
+  navHistory = [];
+  if(editing) clearActiveDraft();
+};
 
 document.getElementById('editToggle').onclick = () => {
   if(!editing){
@@ -1138,10 +1251,13 @@ document.getElementById('editToggle').onclick = () => {
   }
   refreshSheet();
 };
+document.getElementById('nameEditInput').addEventListener('input', (e) => { if(editing){ draft.name = e.target.value; persistActiveDraft(); } });
+document.getElementById('datesEditInput').addEventListener('input', (e) => { if(editing){ draft.dates = e.target.value; persistActiveDraft(); } });
 
 document.getElementById('cancelEdit').onclick = () => {
   editing = false;
   draft = null;
+  clearActiveDraft();
   refreshSheet();
 };
 
@@ -1250,6 +1366,7 @@ document.getElementById('saveEdit').onclick = () => {
   rebuildIndex();
   editing = false;
   draft = null;
+  clearActiveDraft();
   saveToLocalStorage();
   render(applyCurrentFilter());
   refreshSheet();
@@ -1360,6 +1477,17 @@ function refreshNewSheet(){
   chipsFor(document.getElementById('newRelSiblings'), newDraft.siblings, 'siblings', true, 'new', newDraft);
   chipsFor(document.getElementById('newRelChildren'), newDraft.children, 'children', true, 'new');
   document.querySelectorAll('#newOverlay .add-search').forEach(b => b.classList.remove('active'));
+  persistNewDraft();
+}
+function persistNewDraft(){
+  try{
+    const name = document.getElementById('newNameInput').value;
+    const dates = document.getElementById('newDatesInput').value;
+    localStorage.setItem('familyTreeNewDraft', JSON.stringify({newDraft: Object.assign({}, newDraft, {name, dates}), ts: Date.now()}));
+  }catch(e){}
+}
+function clearNewDraft(){
+  try{ localStorage.removeItem('familyTreeNewDraft'); }catch(e){}
 }
 
 document.getElementById('newPhotoFileInput').addEventListener('change', (e) => {
@@ -1404,12 +1532,15 @@ document.getElementById('addPersonBtn').onclick = () => {
   newDraft = blankDraft();
   document.getElementById('newNameInput').value = '';
   document.getElementById('newDatesInput').value = '';
+  clearNewDraft();
   refreshNewSheet();
   document.getElementById('newOverlay').classList.add('active');
 };
-document.getElementById('closeNewSheet').onclick = () => document.getElementById('newOverlay').classList.remove('active');
-document.getElementById('cancelNewPerson').onclick = () => document.getElementById('newOverlay').classList.remove('active');
-document.getElementById('newOverlay').onclick = (e) => { if(e.target.id === 'newOverlay') e.currentTarget.classList.remove('active'); };
+document.getElementById('newNameInput').addEventListener('input', persistNewDraft);
+document.getElementById('newDatesInput').addEventListener('input', persistNewDraft);
+document.getElementById('closeNewSheet').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
+document.getElementById('cancelNewPerson').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
+document.getElementById('newOverlay').onclick = (e) => { if(e.target.id === 'newOverlay'){ e.currentTarget.classList.remove('active'); clearNewDraft(); } };
 
 document.getElementById('saveNewPerson').onclick = () => {
   const name = document.getElementById('newNameInput').value.trim();
@@ -1434,6 +1565,7 @@ document.getElementById('saveNewPerson').onclick = () => {
   PEOPLE.push(newPerson);
   rebuildIndex();
   saveToLocalStorage();
+  clearNewDraft();
   document.getElementById('newOverlay').classList.remove('active');
   render(applyCurrentFilter());
 };
@@ -1826,6 +1958,166 @@ document.getElementById('ghDisconnect').onclick = () => {
   updateSaveBtnLabel();
 };
 updateSaveBtnLabel();
+
+// Now that every function above exists, act on the unpublished-changes checks from
+// right after the initial data load. An in-progress single-person edit takes priority
+// over the coarser "saved locally but never published" cache.
+if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
+  const personName = BY_ID[pendingActiveDraft.personId].name;
+  document.getElementById('recoveryDetail').textContent =
+    'An edit in progress for ' + personName + ' looks like it never got saved.';
+  document.getElementById('recoveryOverlay').classList.add('active');
+  document.getElementById('restoreRecovery').onclick = () => {
+    document.getElementById('recoveryOverlay').classList.remove('active');
+    currentId = pendingActiveDraft.personId;
+    editing = true;
+    draft = pendingActiveDraft.draft;
+    document.getElementById('overlay').classList.add('active');
+    refreshSheet();
+    showPublishProgress('Restored \u2014 review, then tap "Save changes" and Publish.');
+    hidePublishProgress(6000);
+  };
+  document.getElementById('discardRecovery').onclick = () => {
+    clearActiveDraft();
+    document.getElementById('recoveryOverlay').classList.remove('active');
+  };
+} else if(pendingNewDraft){
+  const nm = (pendingNewDraft.newDraft.name||'').trim();
+  document.getElementById('recoveryDetail').textContent =
+    'A new person you were adding' + (nm ? (' ("' + nm + '")') : '') + ' looks like it never got saved.';
+  document.getElementById('recoveryOverlay').classList.add('active');
+  document.getElementById('restoreRecovery').onclick = () => {
+    document.getElementById('recoveryOverlay').classList.remove('active');
+    newDraft = pendingNewDraft.newDraft;
+    document.getElementById('newNameInput').value = newDraft.name || '';
+    document.getElementById('newDatesInput').value = newDraft.dates || '';
+    refreshNewSheet();
+    document.getElementById('newOverlay').classList.add('active');
+    showPublishProgress('Restored \u2014 review, then tap "Add this person" and Publish.');
+    hidePublishProgress(6000);
+  };
+  document.getElementById('discardRecovery').onclick = () => {
+    clearNewDraft();
+    document.getElementById('recoveryOverlay').classList.remove('active');
+  };
+} else if(pendingRecovery){
+  const oldById = {}; pendingRecovery.forEach(p => oldById[p.id] = p);
+  const newById = {}; PEOPLE.forEach(p => newById[p.id] = p);
+  const allIds = new Set([...pendingRecovery.map(p=>p.id), ...PEOPLE.map(p=>p.id)]);
+  let diffCount = 0;
+  allIds.forEach(id => {
+    if(JSON.stringify(oldById[id]) !== JSON.stringify(newById[id])) diffCount++;
+  });
+  document.getElementById('recoveryDetail').textContent =
+    diffCount + (diffCount === 1 ? ' person looks' : ' people look') + ' different from what\'s currently published.';
+  document.getElementById('recoveryOverlay').classList.add('active');
+  document.getElementById('restoreRecovery').onclick = () => {
+    PEOPLE = pendingRecovery;
+    rebuildIndex();
+    render(applyCurrentFilter());
+    document.getElementById('recoveryOverlay').classList.remove('active');
+    showPublishProgress('Restored \u2014 tap Save (top right) to publish these changes.');
+    hidePublishProgress(6000);
+  };
+  document.getElementById('discardRecovery').onclick = () => {
+    try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
+    document.getElementById('recoveryOverlay').classList.remove('active');
+  };
+}
+
+// --- Android/browser back-button handling ---
+// Without this, the phone's physical back button (or an edge-swipe gesture) closes the
+// whole app immediately, even mid-edit. Instead: the first back-press closes whichever
+// modal is open (same as tapping its own close/cancel button); only when nothing is
+// open does back-press actually offer to exit, and even then it asks first.
+const MODAL_CONFIG = [
+  { id: 'photoViewerOverlay', closeBtnId: 'viewerBack' },
+  { id: 'deleteConfirmOverlay', closeBtnId: 'cancelDelete' },
+  { id: 'recoveryOverlay', closeBtnId: 'discardRecovery' },
+  { id: 'settingsOverlay', closeBtnId: 'settingsClose' },
+  { id: 'newOverlay', closeBtnId: 'closeNewSheet' },
+  { id: 'overlay', closeBtnId: 'closeSheet' },
+];
+history.pushState({appBase: true}, '', location.href);
+window.addEventListener('popstate', () => {
+  // Special case: if the profile sheet is open and there's chip-navigation history to
+  // retrace (and we're not mid-edit), step back one person at a time first, matching
+  // what the in-app back arrow already does -- only close the whole sheet once that
+  // history is exhausted.
+  const sheetOpen = document.getElementById('overlay').classList.contains('active');
+  if(sheetOpen && !editing && navHistory.length > 0){
+    goBack();
+    history.pushState({appBase: true}, '', location.href);
+    return;
+  }
+  for(const cfg of MODAL_CONFIG){
+    const el = document.getElementById(cfg.id);
+    if(el && el.classList.contains('active')){
+      document.getElementById(cfg.closeBtnId).click();
+      history.pushState({appBase: true}, '', location.href);
+      return;
+    }
+  }
+  // Nothing was open -- this back-press means "leave the app". Confirm first.
+  const wantsToExit = confirm('Exit the family tree app?');
+  if(wantsToExit){
+    history.back();
+  } else {
+    history.pushState({appBase: true}, '', location.href);
+  }
+});
+
+// --- Pinch-to-zoom the People grid (fewer/more columns) ---
+// Useful for casting to a TV or large screen: pinching in shrinks the cards so more fit
+// per row, pinching out grows them back. Persists across visits on this device.
+(function setupGridPinchZoom(){
+  const grid = document.getElementById('grid');
+  if(!grid) return;
+  const MIN_PX = 72, MAX_PX = 220;
+  let startDist = null;
+  let startSize = null;
+
+  function currentSize(){
+    const stored = localStorage.getItem('familyTreeCardMinWidth');
+    if(stored) return parseInt(stored, 10);
+    const cssVal = getComputedStyle(document.documentElement).getPropertyValue('--card-min-width').trim();
+    return cssVal ? parseInt(cssVal, 10) : 140;
+  }
+  function applySize(px){
+    px = Math.max(MIN_PX, Math.min(MAX_PX, px));
+    document.documentElement.style.setProperty('--card-min-width', px + 'px');
+    try{ localStorage.setItem('familyTreeCardMinWidth', String(px)); }catch(e){}
+  }
+  function dist(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  // restore any previously chosen size on load
+  const saved = localStorage.getItem('familyTreeCardMinWidth');
+  if(saved) document.documentElement.style.setProperty('--card-min-width', saved + 'px');
+
+  grid.addEventListener('touchstart', (e) => {
+    if(e.touches.length === 2){
+      startDist = dist(e.touches);
+      startSize = currentSize();
+    }
+  }, {passive: true});
+
+  grid.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2 && startDist){
+      e.preventDefault();
+      const newDist = dist(e.touches);
+      const scale = newDist / startDist;
+      applySize(Math.round(startSize * scale));
+    }
+  }, {passive: false});
+
+  grid.addEventListener('touchend', (e) => {
+    if(e.touches.length < 2){ startDist = null; startSize = null; }
+  }, {passive: true});
+})();
 </script>
 
 </body>
