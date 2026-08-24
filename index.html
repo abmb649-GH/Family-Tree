@@ -854,20 +854,27 @@ function render(list){
 // person's card to add those photos, without opening the edit screen first.
 function attachPhotoDropZone(card, personId){
   let dragCounter = 0;
+  function isFileDrag(e){
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+  }
   card.addEventListener('dragover', (e) => {
+    if(!isFileDrag(e)) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
   });
   card.addEventListener('dragenter', (e) => {
+    if(!isFileDrag(e)) return;
     e.preventDefault();
     dragCounter++;
     card.classList.add('drag-over');
   });
-  card.addEventListener('dragleave', () => {
+  card.addEventListener('dragleave', (e) => {
+    if(!isFileDrag(e)) return;
     dragCounter = Math.max(0, dragCounter - 1);
     if(dragCounter === 0) card.classList.remove('drag-over');
   });
   card.addEventListener('drop', (e) => {
+    if(!isFileDrag(e)) return;
     e.preventDefault();
     dragCounter = 0;
     card.classList.remove('drag-over');
@@ -928,17 +935,26 @@ function handleSheetPhotoDrop(files){
   const sheetEl = document.querySelector('#overlay .sheet');
   if(!sheetEl) return;
   let dragCounter = 0;
-  sheetEl.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  // Only react to an actual file being dragged in -- dragging selected text (a normal
+  // browser behavior when you click-drag across an input field) fires these same events,
+  // and intercepting those was interfering with ordinary text selection.
+  function isFileDrag(e){
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+  }
+  sheetEl.addEventListener('dragover', (e) => { if(!isFileDrag(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
   sheetEl.addEventListener('dragenter', (e) => {
+    if(!isFileDrag(e)) return;
     e.preventDefault();
     dragCounter++;
     sheetEl.classList.add('sheet-drag-over');
   });
-  sheetEl.addEventListener('dragleave', () => {
+  sheetEl.addEventListener('dragleave', (e) => {
+    if(!isFileDrag(e)) return;
     dragCounter = Math.max(0, dragCounter - 1);
     if(dragCounter === 0) sheetEl.classList.remove('sheet-drag-over');
   });
   sheetEl.addEventListener('drop', (e) => {
+    if(!isFileDrag(e)) return;
     e.preventDefault();
     dragCounter = 0;
     sheetEl.classList.remove('sheet-drag-over');
