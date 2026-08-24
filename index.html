@@ -699,7 +699,11 @@ function rebuildIndex(){
 // The family site's data.json is always the source of truth -- fetched fresh on every
 // visit so everyone sees the latest published version, never a stale local copy.
 try{
-  const resp = await fetch('data.json', {cache: 'no-store'});
+  // Cache-busting query param: GitHub Pages serves through a CDN that can cache files
+  // for a few minutes independently of the browser -- {cache:'no-store'} alone only
+  // controls the browser's own cache, not that CDN layer. Adding a changing query string
+  // forces every layer to treat this as a fresh request every time.
+  const resp = await fetch('data.json?v=' + Date.now(), {cache: 'no-store'});
   if(!resp.ok) throw new Error('Server responded with ' + resp.status);
   PEOPLE = await resp.json();
 }catch(err){
