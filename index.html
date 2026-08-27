@@ -242,6 +242,13 @@
   .chip .rm{ color:#b3452f; font-weight:900; padding-left:2px; }
   .no-data{ color:#b3a583; font-size:.9em; font-style:italic; }
   .siblings-edit-hint{ width:100%; font-size:.78em; color:#a3946f; margin-top:6px; line-height:1.4; }
+  .recovery-item{ display:flex; gap:10px; align-items:flex-start; padding:10px 4px; border-bottom:1px solid var(--line); }
+  .recovery-item input[type="checkbox"]{ margin-top:3px; width:18px; height:18px; flex-shrink:0; }
+  .recovery-item-name{ font-weight:700; color:var(--accent-dark); }
+  .recovery-item-summary{ font-size:.85em; color:#7a6a48; margin-top:2px; }
+  .recovery-item-badge{ font-size:.72em; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:6px; }
+  .recovery-item-badge.added{ background:#e3f0dd; color:#3d6b2f; }
+  .recovery-item-badge.modified{ background:#fff0d1; color:#8a6417; }
 
   .add-chip-btn{
     background:none; border:1.5px dashed var(--accent); border-radius:20px;
@@ -536,14 +543,20 @@
 <div class="publish-progress" id="publishProgress"></div>
 
 <div class="overlay" id="recoveryOverlay">
-  <div class="sheet" style="max-width:440px;">
+  <div class="sheet" style="max-width:520px;">
    <div class="sheet-inner">
     <h2 style="margin-top:0;">Unpublished changes found</h2>
     <p style="color:var(--ink); line-height:1.5; text-align:left;">
-      It looks like some edits from a previous visit never made it online &mdash;
-      possibly from a connection issue while publishing.
+      This browser has some local changes that don't match what's currently published
+      &mdash; possibly real edits that never made it online, or just an old leftover from
+      an earlier visit. Review each one below and pick what to keep.
     </p>
     <p id="recoveryDetail" style="color:#8a7a56; font-size:.88em; text-align:left;"></p>
+    <div id="recoveryChecklistControls" style="display:none; text-align:left; margin-bottom:8px;">
+      <button class="textbtn2" id="recoverySelectAll">Select all</button>
+      <button class="textbtn2" id="recoverySelectNone">Select none</button>
+    </div>
+    <div id="recoveryChecklist" style="max-height:40vh; overflow:auto; text-align:left;"></div>
     <div class="save-bar active">
       <button class="cancel-btn" id="discardRecovery">Discard</button>
       <button class="save-btn" id="restoreRecovery">Restore &amp; review</button>
@@ -2262,25 +2275,84 @@ if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
   const oldById = {}; pendingRecovery.forEach(p => oldById[p.id] = p);
   const newById = {}; PEOPLE.forEach(p => newById[p.id] = p);
   const allIds = new Set([...pendingRecovery.map(p=>p.id), ...PEOPLE.map(p=>p.id)]);
-  let diffCount = 0;
+
+  function summarizePersonDiff(oldP, newP){
+    const changes = [];
+    if(oldP.name !== newP.name) changes.push('name');
+    if((oldP.dates||'') !== (newP.dates||'')) changes.push('dates');
+    if((oldP.photos||[]).length !== (newP.photos||[]).length) changes.push(`photos (${(newP.photos||[]).length} \u2192 ${(oldP.photos||[]).length})`);
+    if(JSON.stringify(oldP.parents) !== JSON.stringify(newP.parents)) changes.push('parents');
+    if(JSON.stringify(oldP.spouse) !== JSON.stringify(newP.spouse)) changes.push('spouse');
+    if(JSON.stringify(oldP.children) !== JSON.stringify(newP.children)) changes.push('children');
+    return changes.length ? changes.join(', ') + ' changed' : 'minor difference';
+  }
+
+  // Only two kinds of difference are actually worth reviewing here: something this
+  // browser has that isn't live yet ("added"), or something that exists in both but
+  // looks different ("modified"). A person who's live but wasn't in this old local
+  // snapshot just means someone else added them since -- already correctly published,
+  // nothing to recover, so it's left out of the list entirely.
+  const diffItems = [];
   allIds.forEach(id => {
-    if(JSON.stringify(oldById[id]) !== JSON.stringify(newById[id])) diffCount++;
+    const oldP = oldById[id], newP = newById[id];
+    if(JSON.stringify(oldP) === JSON.stringify(newP)) return;
+    if(!newP){
+      diffItems.push({ id, type: 'added', name: oldP.name, summary: 'Not currently published', oldP });
+    } else if(oldP){
+      diffItems.push({ id, type: 'modified', name: oldP.name, summary: summarizePersonDiff(oldP, newP), oldP });
+    }
   });
-  document.getElementById('recoveryDetail').textContent =
-    diffCount + (diffCount === 1 ? ' person looks' : ' people look') + ' different from what\'s currently published.';
-  document.getElementById('recoveryOverlay').classList.add('active');
-  document.getElementById('restoreRecovery').onclick = () => {
-    PEOPLE = pendingRecovery;
-    rebuildIndex();
-    render(applyCurrentFilter());
-    document.getElementById('recoveryOverlay').classList.remove('active');
-    showPublishProgress('Restored \u2014 tap Save (top right) to publish these changes.');
-    hidePublishProgress(6000);
-  };
-  document.getElementById('discardRecovery').onclick = () => {
+
+  if(!diffItems.length){
+    // Everything different was just newer stuff already live -- nothing this browser
+    // has is actually worth restoring.
     try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
-    document.getElementById('recoveryOverlay').classList.remove('active');
-  };
+  } else {
+    document.getElementById('recoveryDetail').textContent =
+      diffItems.length + (diffItems.length === 1 ? ' person looks' : ' people look') +
+      ' different from what\'s currently published. Tick the ones you want to bring back:';
+    const listEl = document.getElementById('recoveryChecklist');
+    listEl.innerHTML = diffItems.map(item => `
+      <label class="recovery-item">
+        <input type="checkbox" data-recovery-id="${item.id}" checked>
+        <span>
+          <span class="recovery-item-name">${esc(item.name)}</span><span class="recovery-item-badge ${item.type}">${item.type === 'added' ? 'new' : 'changed'}</span>
+          <div class="recovery-item-summary">${esc(item.summary)}</div>
+        </span>
+      </label>
+    `).join('');
+    document.getElementById('recoveryChecklistControls').style.display = 'block';
+    document.getElementById('recoverySelectAll').onclick = () => {
+      listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+    };
+    document.getElementById('recoverySelectNone').onclick = () => {
+      listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    };
+    document.getElementById('recoveryOverlay').classList.add('active');
+    document.getElementById('restoreRecovery').onclick = () => {
+      const checkedIds = new Set(
+        Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => Number(cb.dataset.recoveryId))
+      );
+      if(!checkedIds.size){
+        document.getElementById('recoveryOverlay').classList.remove('active');
+        return;
+      }
+      diffItems.forEach(item => {
+        if(!checkedIds.has(item.id)) return;
+        const existingIdx = PEOPLE.findIndex(p => p.id === item.id);
+        if(existingIdx === -1){ PEOPLE.push(item.oldP); } else { PEOPLE[existingIdx] = item.oldP; }
+      });
+      rebuildIndex();
+      render(applyCurrentFilter());
+      document.getElementById('recoveryOverlay').classList.remove('active');
+      showPublishProgress(`Restored ${checkedIds.size} \u2014 tap Save (top right) to publish these changes.`);
+      hidePublishProgress(6000);
+    };
+    document.getElementById('discardRecovery').onclick = () => {
+      try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
+      document.getElementById('recoveryOverlay').classList.remove('active');
+    };
+  }
 }
 
 // --- Android/browser back-button handling ---
