@@ -220,6 +220,8 @@
   .rel-title{ font-size:.85em; text-transform:uppercase; letter-spacing:.06em; color:#a3946f; font-weight:700; margin:16px 0 8px; display:flex; justify-content:space-between; align-items:center; }
   .rel-chips{ display:flex; flex-wrap:wrap; gap:8px; }
   .chip{ background:var(--bg); border:1px solid var(--line); border-radius:20px; padding:6px 14px 6px 6px; font-size:.95em; cursor:pointer; font-weight:600; color:var(--accent-dark); display:inline-flex; align-items:center; gap:8px; }
+  .chip-drag-handle{ cursor:grab; color:#b3a583; font-size:1.1em; padding:0 2px; touch-action:none; }
+  .chip-dragging{ opacity:.55; box-shadow:0 4px 12px rgba(0,0,0,.2); }
   .chip-self{
     cursor:default; opacity:.6; background:transparent;
     border:1.5px dashed var(--line); color:#a3946f;
@@ -666,8 +668,21 @@ function dedupePeople(){
   PEOPLE = Array.from(seen.values());
 }
 function recomputeSiblingsAndChildren(){
+  // Children: preserve whatever order is already there (which may have been manually
+  // set via drag-and-drop, useful when birth dates aren't known) -- only add newly
+  // linked children at the end, and drop any that are no longer actually linked.
+  PEOPLE.forEach(p => {
+    const validChildIds = new Set(PEOPLE.filter(c => (c.parents||[]).includes(p.id)).map(c => c.id));
+    const existing = (p.children || []).filter(id => validChildIds.has(id));
+    const existingSet = new Set(existing);
+    const newOnes = [...validChildIds].filter(id => !existingSet.has(id));
+    p.children = [...existing, ...newOnes];
+  });
+
   // Siblings and children are always derived from Parents -- never stored/edited
   // independently -- so they can never drift out of sync the way this bug showed.
+  // Ordered to match a parent's Children order where available, so a manual reorder
+  // there is reflected consistently in each sibling's own profile too.
   const byParentSet = {};
   PEOPLE.forEach(p => {
     p.siblings = [];
@@ -678,15 +693,16 @@ function recomputeSiblingsAndChildren(){
     }
   });
   Object.values(byParentSet).forEach(group => {
-    group.forEach(id => { BY_ID[id].siblings = group.filter(x => x !== id); });
-  });
-
-  PEOPLE.forEach(p => { p.children = []; });
-  PEOPLE.forEach(p => {
-    (p.parents||[]).forEach(parentId => {
-      const parent = BY_ID[parentId];
-      if(parent && !parent.children.includes(p.id)) parent.children.push(p.id);
-    });
+    const groupSet = new Set(group);
+    let orderedGroup = group;
+    const anyMember = BY_ID[group[0]];
+    const parent = anyMember && anyMember.parents && anyMember.parents.length ? BY_ID[anyMember.parents[0]] : null;
+    if(parent && parent.children){
+      const fromParent = parent.children.filter(id => groupSet.has(id));
+      const remaining = group.filter(id => !fromParent.includes(id));
+      orderedGroup = [...fromParent, ...remaining];
+    }
+    orderedGroup.forEach(id => { BY_ID[id].siblings = orderedGroup.filter(x => x !== id); });
   });
 }
 function rebuildIndex(){
@@ -1009,8 +1025,13 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       // siblings are derived from shared Parents, not individually removable here --
       // "un-siblinging" someone means editing their Parents directly instead
       const showRemove = editing && !item.isSelf && field !== 'siblings';
-      chip.innerHTML = avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+      // Children can be manually reordered (drag handle) when editing -- useful for
+      // families where birth dates aren't known but the sequence is remembered.
+      const showReorderHandle = editing && field === 'children';
+      const handleHtml = showReorderHandle ? '<span class="chip-drag-handle" title="Drag to reorder">&#9776;</span>' : '';
+      chip.innerHTML = handleHtml + avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
         (showRemove ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
+      if(showReorderHandle) chip.dataset.id = item.id;
       if(item.isSelf){
         // greyed out, unclickable -- just shows this person's place in birth order
       } else if(!editing){
@@ -1025,6 +1046,13 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       }
       container.appendChild(chip);
     });
+    if(editing && field === 'children' && items.length > 1){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'No birth dates recorded for some of these \u2014 drag the \u2630 handle to set the correct order.';
+      container.appendChild(hint);
+      setupChildReorder(container, field, mode);
+    }
     if(editing && field === 'siblings'){
       const hint = document.createElement('div');
       hint.className = 'siblings-edit-hint';
@@ -1082,6 +1110,65 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
     };
     container.appendChild(addBtn);
   }
+}
+
+// Lets someone drag a Children chip to reorder the list -- useful when birth dates
+// aren't known but the actual sequence is remembered. Works via Pointer Events (not
+// HTML5 native drag-and-drop) specifically so it works reliably on phones, not just
+// with a mouse. Uses nearest-neighbor detection since chips wrap onto multiple rows.
+function setupChildReorder(container, field, mode){
+  let dragEl = null, startX = 0, startY = 0, dragging = false;
+
+  container.querySelectorAll('.chip-drag-handle').forEach(handle => {
+    handle.style.touchAction = 'none';
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      dragEl = handle.closest('.chip');
+      if(!dragEl) return;
+      startX = e.clientX; startY = e.clientY;
+      dragging = false;
+      handle.setPointerCapture(e.pointerId);
+
+      const onMove = (e) => {
+        if(!dragging){
+          if(Math.hypot(e.clientX - startX, e.clientY - startY) < 6) return;
+          dragging = true;
+          dragEl.classList.add('chip-dragging');
+        }
+        // Find the chip whose center is closest to the pointer (excluding the one being dragged)
+        let closest = null, closestDist = Infinity;
+        container.querySelectorAll('.chip').forEach(chip => {
+          if(chip === dragEl) return;
+          const r = chip.getBoundingClientRect();
+          const cx = r.left + r.width/2, cy = r.top + r.height/2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          if(dist < closestDist){ closestDist = dist; closest = chip; }
+        });
+        if(closest){
+          const r = closest.getBoundingClientRect();
+          const insertAfter = e.clientX > r.left + r.width/2;
+          if(insertAfter){
+            closest.after(dragEl);
+          } else {
+            closest.before(dragEl);
+          }
+        }
+      };
+      const onUp = (e) => {
+        handle.releasePointerCapture(e.pointerId);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        if(dragging){
+          dragEl.classList.remove('chip-dragging');
+          const newOrder = Array.from(container.querySelectorAll('.chip[data-id]')).map(c => Number(c.dataset.id));
+          if(mode === 'new'){ newDraft[field] = newOrder; } else { draft[field] = newOrder; }
+        }
+        dragEl = null; dragging = false;
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  });
 }
 
 let currentId = null;
@@ -1387,6 +1474,27 @@ document.getElementById('saveEdit').onclick = () => {
       if(other) other[mirrorField] = other[mirrorField].filter(x => x !== currentId);
     });
   });
+
+  // If this person's Children order was manually changed (drag-to-reorder), keep any
+  // co-parent's own Children list in the same order too -- otherwise the sibling order
+  // shown from that other parent's side would still reflect the old, un-reordered list.
+  if(draft.children && orig.children && draft.children.length === orig.children.length &&
+     draft.children.some((id, i) => id !== orig.children[i])){
+    const coParentIds = new Set();
+    draft.children.forEach(childId => {
+      const child = BY_ID[childId];
+      if(child) (child.parents||[]).forEach(pid => { if(pid !== currentId) coParentIds.add(pid); });
+    });
+    coParentIds.forEach(coParentId => {
+      const coParent = BY_ID[coParentId];
+      if(coParent && coParent.children){
+        const coParentChildSet = new Set(coParent.children);
+        if(coParentChildSet.size === draft.children.length && draft.children.every(id => coParentChildSet.has(id))){
+          coParent.children = draft.children.slice();
+        }
+      }
+    });
+  }
 
   Object.assign(orig, draft);
   rebuildIndex();
