@@ -1001,9 +1001,23 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
 
   if(field === 'siblings' || field === 'children'){
     const items = list.filter(id => BY_ID[id]).map(id => ({ id, person: BY_ID[id], isSelf:false }));
-    // only show the "you are here" placeholder among siblings, and only when there are other siblings to order against
+    // Only show the "you are here" placeholder among siblings, and only when there are
+    // other siblings to order against. Insert it at self's actual position in the shared
+    // parent's Children order (not always at the end) -- otherwise a manual reorder that
+    // moves "self" earlier wouldn't visually show up when viewed from their own profile.
     if(field === 'siblings' && selfPerson && list.length > 0){
-      items.push({ id: selfPerson.id, person: selfPerson, isSelf:true });
+      let selfIndex = items.length;
+      if(selfPerson.parents && selfPerson.parents.length){
+        const parent = BY_ID[selfPerson.parents[0]];
+        if(parent && parent.children){
+          const posInParent = parent.children.indexOf(selfPerson.id);
+          if(posInParent !== -1){
+            const idsBeforeSelf = new Set(parent.children.slice(0, posInParent));
+            selfIndex = items.filter(it => idsBeforeSelf.has(it.id)).length;
+          }
+        }
+      }
+      items.splice(selfIndex, 0, { id: selfPerson.id, person: selfPerson, isSelf:true });
     }
     items.sort((a,b) => {
       const da = parseBirthDate(a.person.dates), db = parseBirthDate(b.person.dates);
@@ -1025,15 +1039,18 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       // siblings are derived from shared Parents, not individually removable here --
       // "un-siblinging" someone means editing their Parents directly instead
       const showRemove = editing && !item.isSelf && field !== 'siblings';
-      // Children can be manually reordered (drag handle) when editing -- useful for
-      // families where birth dates aren't known but the sequence is remembered.
-      const showReorderHandle = editing && field === 'children';
+      // Children and siblings can be manually reordered (drag handle) when editing --
+      // useful for families where birth dates aren't known but the sequence is
+      // remembered. The "you are here" self chip in Siblings can be dragged too, to
+      // place yourself correctly among your own siblings.
+      const showReorderHandle = editing && (field === 'children' || field === 'siblings');
       const handleHtml = showReorderHandle ? '<span class="chip-drag-handle" title="Drag to reorder">&#9776;</span>' : '';
       chip.innerHTML = handleHtml + avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
         (showRemove ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
       if(showReorderHandle) chip.dataset.id = item.id;
       if(item.isSelf){
         // greyed out, unclickable -- just shows this person's place in birth order
+        // (still draggable via its handle, to reposition it in the sequence)
       } else if(!editing){
         chip.onclick = () => openSheet(item.id, true);
       } else if(showRemove){
@@ -1051,13 +1068,14 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       hint.className = 'siblings-edit-hint';
       hint.textContent = 'No birth dates recorded for some of these \u2014 drag the \u2630 handle to set the correct order.';
       container.appendChild(hint);
-      setupChildReorder(container, field, mode);
+      setupChipReorder(container, field, mode);
     }
     if(editing && field === 'siblings'){
       const hint = document.createElement('div');
       hint.className = 'siblings-edit-hint';
-      hint.textContent = 'Siblings are automatic \u2014 anyone who shares the same Parents shows up here. To remove someone, edit their Parents instead.';
+      hint.textContent = 'To remove someone, edit their Parents instead. Drag the \u2630 handle to set the birth order when dates aren\u2019t known.';
       container.appendChild(hint);
+      if(items.length > 1) setupChipReorder(container, field, mode);
     }
     if(editing){
       const addBtn = document.createElement('button');
@@ -1083,7 +1101,13 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       const avatarHtml = mainPhoto(person)
         ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
         : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
-      chip.innerHTML = avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+      // When someone has more than one spouse (e.g. remarried), the order can be
+      // manually set the same way as Children -- useful when marriage dates aren't
+      // recorded but the sequence (1st marriage, 2nd marriage...) is remembered.
+      const showReorderHandle = editing && field === 'spouse' && ids.length > 1;
+      const handleHtml = showReorderHandle ? '<span class="chip-drag-handle" title="Drag to reorder">&#9776;</span>' : '';
+      if(showReorderHandle) chip.dataset.id = id;
+      chip.innerHTML = handleHtml + avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
         (editing ? ' <span class="rm" data-remove="'+field+'" data-id="'+id+'">&#10005;</span>' : '');
       if(!editing){
         chip.onclick = () => openSheet(id, true);
@@ -1095,6 +1119,13 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
       }
       container.appendChild(chip);
     });
+    if(editing && field === 'spouse' && ids.length > 1){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'More than one spouse recorded \u2014 drag the \u2630 handle to put them in order (e.g. 1st marriage, 2nd marriage).';
+      container.appendChild(hint);
+      setupChipReorder(container, field, mode);
+    }
   } else if(!editing){
     container.innerHTML = '<span class="no-data">Not shown in this tree</span>';
   }
@@ -1116,7 +1147,12 @@ function chipsFor(container, ids, field, editing, mode, selfPerson){
 // aren't known but the actual sequence is remembered. Works via Pointer Events (not
 // HTML5 native drag-and-drop) specifically so it works reliably on phones, not just
 // with a mouse. Uses nearest-neighbor detection since chips wrap onto multiple rows.
-function setupChildReorder(container, field, mode){
+//
+// Spouse and Children write into the draft, same as any other edit (applied on Save).
+// Siblings are different -- they're not stored directly, they're derived from whichever
+// parent's Children list generated them -- so reordering there writes straight through
+// to that parent's real record immediately, the same way adding a sibling already does.
+function setupChipReorder(container, field, mode){
   let dragEl = null, startX = 0, startY = 0, dragging = false;
 
   container.querySelectorAll('.chip-drag-handle').forEach(handle => {
@@ -1161,7 +1197,13 @@ function setupChildReorder(container, field, mode){
         if(dragging){
           dragEl.classList.remove('chip-dragging');
           const newOrder = Array.from(container.querySelectorAll('.chip[data-id]')).map(c => Number(c.dataset.id));
-          if(mode === 'new'){ newDraft[field] = newOrder; } else { draft[field] = newOrder; }
+          if(field === 'siblings'){
+            applySiblingReorder(newOrder);
+          } else if(mode === 'new'){
+            newDraft[field] = newOrder;
+          } else {
+            draft[field] = newOrder;
+          }
         }
         dragEl = null; dragging = false;
       };
@@ -1169,6 +1211,43 @@ function setupChildReorder(container, field, mode){
       window.addEventListener('pointerup', onUp);
     });
   });
+}
+
+// Keeps a co-parent's own Children list in the same order after one parent's list was
+// reordered -- otherwise the sibling order shown from the other parent's side would
+// still reflect the old, un-reordered list.
+function syncCoParentChildrenOrder(fromParentId, newChildOrder){
+  const coParentIds = new Set();
+  newChildOrder.forEach(childId => {
+    const child = BY_ID[childId];
+    if(child) (child.parents||[]).forEach(pid => { if(pid !== fromParentId) coParentIds.add(pid); });
+  });
+  coParentIds.forEach(coParentId => {
+    const coParent = BY_ID[coParentId];
+    if(coParent && coParent.children){
+      const coParentChildSet = new Set(coParent.children);
+      if(coParentChildSet.size === newChildOrder.length && newChildOrder.every(id => coParentChildSet.has(id))){
+        coParent.children = newChildOrder.slice();
+      }
+    }
+  });
+}
+
+// Siblings reordering writes through to the real, saved parent record immediately
+// (there's no "Siblings" field to hold a draft of -- it's derived), the same way
+// adding a sibling already applies straight away rather than waiting for Save.
+function applySiblingReorder(newOrderIncludingSelf){
+  const me = BY_ID[currentId];
+  if(!me || !me.parents || !me.parents.length) return;
+  const parentId = me.parents[0];
+  const parent = BY_ID[parentId];
+  if(!parent) return;
+  parent.children = newOrderIncludingSelf.slice();
+  syncCoParentChildrenOrder(parentId, newOrderIncludingSelf);
+  rebuildIndex();
+  saveToLocalStorage();
+  render(applyCurrentFilter());
+  refreshSheet();
 }
 
 let currentId = null;
@@ -1480,20 +1559,7 @@ document.getElementById('saveEdit').onclick = () => {
   // shown from that other parent's side would still reflect the old, un-reordered list.
   if(draft.children && orig.children && draft.children.length === orig.children.length &&
      draft.children.some((id, i) => id !== orig.children[i])){
-    const coParentIds = new Set();
-    draft.children.forEach(childId => {
-      const child = BY_ID[childId];
-      if(child) (child.parents||[]).forEach(pid => { if(pid !== currentId) coParentIds.add(pid); });
-    });
-    coParentIds.forEach(coParentId => {
-      const coParent = BY_ID[coParentId];
-      if(coParent && coParent.children){
-        const coParentChildSet = new Set(coParent.children);
-        if(coParentChildSet.size === draft.children.length && draft.children.every(id => coParentChildSet.has(id))){
-          coParent.children = draft.children.slice();
-        }
-      }
-    });
+    syncCoParentChildrenOrder(currentId, draft.children);
   }
 
   Object.assign(orig, draft);
