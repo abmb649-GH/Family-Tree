@@ -249,6 +249,18 @@
   .recovery-item-badge{ font-size:.72em; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:6px; }
   .recovery-item-badge.added{ background:#e3f0dd; color:#3d6b2f; }
   .recovery-item-badge.modified{ background:#fff0d1; color:#8a6417; }
+  .recovery-item-badge.decided{ background:#e6e6e6; color:#555; }
+
+  .save-bar-triple button{ font-size:.82em; padding:11px 6px; }
+  .review-btn{ background:#fff; }
+
+  .review-field-row{ border-bottom:1px solid var(--line); padding:10px 0; }
+  .review-field-row:last-child{ border-bottom:none; }
+  .review-field-label{ font-weight:700; color:var(--accent-dark); font-size:.85em; margin-bottom:6px; }
+  .review-field-cols{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .review-field-col{ background:var(--bg); border-radius:10px; padding:8px 10px; font-size:.88em; color:var(--ink); line-height:1.4; word-break:break-word; }
+  .review-field-col.review-after{ background:#fff8ea; border:1px solid var(--accent); }
+  .review-col-tag{ font-size:.68em; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:#8a7a56; margin-bottom:3px; }
 
   .add-chip-btn{
     background:none; border:1.5px dashed var(--accent); border-radius:20px;
@@ -549,17 +561,37 @@
     <p style="color:var(--ink); line-height:1.5; text-align:left;">
       This browser has some local changes that don't match what's currently published
       &mdash; possibly real edits that never made it online, or just an old leftover from
-      an earlier visit. Review each one below and pick what to keep.
+      an earlier visit.
     </p>
     <p id="recoveryDetail" style="color:#8a7a56; font-size:.88em; text-align:left;"></p>
-    <div id="recoveryChecklistControls" style="display:none; text-align:left; margin-bottom:8px;">
-      <button class="textbtn2" id="recoverySelectAll">Select all</button>
-      <button class="textbtn2" id="recoverySelectNone">Select none</button>
-    </div>
     <div id="recoveryChecklist" style="max-height:40vh; overflow:auto; text-align:left;"></div>
-    <div class="save-bar active">
+    <div class="save-bar active" id="recoverySaveBar">
       <button class="cancel-btn" id="discardRecovery">Discard</button>
+      <button class="textbtn2 review-btn" id="reviewRecoveryBtn" style="display:none;">Review</button>
       <button class="save-btn" id="restoreRecovery">Restore &amp; review</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="recoveryReviewOverlay">
+  <div class="sheet" style="max-width:560px;">
+   <div class="sheet-inner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span id="reviewCounter" style="font-size:.85em; font-weight:700; color:var(--accent-dark);"></span>
+      <button class="close" id="reviewClose" style="width:32px;height:32px;font-size:1em;">&#10005;</button>
+    </div>
+    <div id="reviewCardName" style="text-align:left; margin-bottom:10px;"></div>
+    <p id="reviewCardNote" style="color:#8a7a56; font-size:.85em; text-align:left; margin:-4px 0 10px; display:none;"></p>
+    <div id="reviewCardBody" style="text-align:left;"></div>
+    <div class="save-bar active save-bar-triple" style="flex-wrap:wrap;">
+      <button class="cancel-btn" id="reviewKeepPublished">Keep published</button>
+      <button class="textbtn2 review-btn" id="reviewEditPerson">Edit</button>
+      <button class="save-btn" id="reviewUseVersion">Use this version</button>
+    </div>
+    <div class="review-nav" style="margin-top:14px;">
+      <button class="review-nav-btn" id="reviewPrevBtn">&#8592; Prev</button>
+      <button class="review-nav-btn" id="reviewNextBtn">Next &#8594;</button>
     </div>
    </div>
   </div>
@@ -2297,9 +2329,9 @@ if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
     const oldP = oldById[id], newP = newById[id];
     if(JSON.stringify(oldP) === JSON.stringify(newP)) return;
     if(!newP){
-      diffItems.push({ id, type: 'added', name: oldP.name, summary: 'Not currently published', oldP });
+      diffItems.push({ id, type: 'added', name: oldP.name, summary: 'Not currently published', oldP, decision: null });
     } else if(oldP){
-      diffItems.push({ id, type: 'modified', name: oldP.name, summary: summarizePersonDiff(oldP, newP), oldP });
+      diffItems.push({ id, type: 'modified', name: oldP.name, summary: summarizePersonDiff(oldP, newP), oldP, decision: null });
     }
   });
 
@@ -2310,48 +2342,200 @@ if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
   } else {
     document.getElementById('recoveryDetail').textContent =
       diffItems.length + (diffItems.length === 1 ? ' person looks' : ' people look') +
-      ' different from what\'s currently published. Tick the ones you want to bring back:';
+      ' different from what\'s currently published:';
     const listEl = document.getElementById('recoveryChecklist');
     listEl.innerHTML = diffItems.map(item => `
-      <label class="recovery-item">
-        <input type="checkbox" data-recovery-id="${item.id}" checked>
+      <div class="recovery-item">
         <span>
           <span class="recovery-item-name">${esc(item.name)}</span><span class="recovery-item-badge ${item.type}">${item.type === 'added' ? 'new' : 'changed'}</span>
           <div class="recovery-item-summary">${esc(item.summary)}</div>
         </span>
-      </label>
+      </div>
     `).join('');
-    document.getElementById('recoveryChecklistControls').style.display = 'block';
-    document.getElementById('recoverySelectAll').onclick = () => {
-      listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-    };
-    document.getElementById('recoverySelectNone').onclick = () => {
-      listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    };
+    document.getElementById('reviewRecoveryBtn').style.display = 'block';
+    document.getElementById('restoreRecovery').textContent = 'Save as is';
     document.getElementById('recoveryOverlay').classList.add('active');
+
+    // "Save as is" -- bring every differing person's local version back in one go,
+    // no per-person review. Still just fills in the workspace; Publish (top right)
+    // is a separate, later step, same as it's always been.
     document.getElementById('restoreRecovery').onclick = () => {
-      const checkedIds = new Set(
-        Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked')).map(cb => Number(cb.dataset.recoveryId))
-      );
-      if(!checkedIds.size){
-        document.getElementById('recoveryOverlay').classList.remove('active');
-        return;
-      }
       diffItems.forEach(item => {
-        if(!checkedIds.has(item.id)) return;
         const existingIdx = PEOPLE.findIndex(p => p.id === item.id);
-        if(existingIdx === -1){ PEOPLE.push(item.oldP); } else { PEOPLE[existingIdx] = item.oldP; }
+        if(existingIdx === -1){ PEOPLE.push(JSON.parse(JSON.stringify(item.oldP))); } else { PEOPLE[existingIdx] = JSON.parse(JSON.stringify(item.oldP)); }
       });
       rebuildIndex();
       render(applyCurrentFilter());
+      saveToLocalStorage();
       document.getElementById('recoveryOverlay').classList.remove('active');
-      showPublishProgress(`Restored ${checkedIds.size} \u2014 tap Save (top right) to publish these changes.`);
+      showPublishProgress(`Restored ${diffItems.length} \u2014 tap Save (top right) to publish these changes.`);
       hidePublishProgress(6000);
     };
     document.getElementById('discardRecovery').onclick = () => {
       try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
       document.getElementById('recoveryOverlay').classList.remove('active');
     };
+
+    // --- Review, one person at a time, with a side-by-side before/after ---
+    let reviewItems = diffItems;
+    let reviewIndex = 0;
+    let reviewEditContext = null; // {index} while the full person editor is open mid-review
+
+    function nameForId(id){
+      const p = BY_ID[id] || oldById[id];
+      return p ? p.name : 'Unknown person';
+    }
+    function idsToNames(ids){
+      if(!ids || !ids.length) return '\u2014';
+      return ids.map(nameForId).join(', ');
+    }
+    function reviewFieldRows(oldP, newP){
+      // oldP = this browser's local version (what "Use this version" applies).
+      // newP = currently published version, or null if not published at all yet.
+      const rows = [];
+      if(!newP || oldP.name !== newP.name){
+        rows.push({ label: 'Name', before: newP ? newP.name : '\u2014 not published yet', after: oldP.name });
+      }
+      const beforeDates = newP ? (newP.dates || '\u2014') : '\u2014';
+      const afterDates = oldP.dates || '\u2014';
+      // For a not-yet-published person, only worth a row if this browser actually has
+      // something to show -- an empty "\u2014 vs \u2014" row tells you nothing new.
+      if(newP ? beforeDates !== afterDates : !!oldP.dates){
+        rows.push({ label: 'Dates', before: beforeDates, after: afterDates });
+      }
+      const beforePhotoCount = newP ? (newP.photos||[]).length : 0;
+      const afterPhotoCount = (oldP.photos||[]).length;
+      if(newP ? beforePhotoCount !== afterPhotoCount : afterPhotoCount > 0){
+        rows.push({
+          label: 'Photos',
+          before: beforePhotoCount + (beforePhotoCount===1?' photo':' photos'),
+          after: afterPhotoCount + (afterPhotoCount===1?' photo':' photos')
+        });
+      }
+      ['parents','spouse','children'].forEach(field => {
+        const beforeIds = newP ? (newP[field]||[]) : [];
+        const afterIds = oldP[field]||[];
+        const showRow = newP ? (JSON.stringify(beforeIds) !== JSON.stringify(afterIds)) : afterIds.length > 0;
+        if(showRow){
+          rows.push({
+            label: field.charAt(0).toUpperCase()+field.slice(1),
+            before: newP ? idsToNames(beforeIds) : '\u2014',
+            after: idsToNames(afterIds)
+          });
+        }
+      });
+      return rows;
+    }
+    function renderReviewCard(){
+      const item = reviewItems[reviewIndex];
+      document.getElementById('reviewCounter').textContent = `Person ${reviewIndex+1} of ${reviewItems.length}`;
+      const decidedBadge = item.decision
+        ? `<span class="recovery-item-badge decided">${item.decision === 'keep' ? 'kept published' : (item.decision === 'edited' ? 'edited & saved' : 'using this version')}</span>`
+        : '';
+      document.getElementById('reviewCardName').innerHTML =
+        `<span class="recovery-item-name" style="font-size:1.15em;">${esc(item.name)}</span>` +
+        `<span class="recovery-item-badge ${item.type}">${item.type === 'added' ? 'new' : 'changed'}</span>${decidedBadge}`;
+      const noteEl = document.getElementById('reviewCardNote');
+      if(item.type === 'added'){
+        noteEl.textContent = 'This person only exists in this browser \u2014 not on the published site yet.';
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.style.display = 'none';
+      }
+      const newP = item.type === 'added' ? null : BY_ID[item.id];
+      const rows = reviewFieldRows(item.oldP, newP);
+      document.getElementById('reviewCardBody').innerHTML = rows.map(r => `
+        <div class="review-field-row">
+          <div class="review-field-label">${esc(r.label)}</div>
+          <div class="review-field-cols">
+            <div class="review-field-col review-before"><div class="review-col-tag">Published</div><div>${esc(String(r.before))}</div></div>
+            <div class="review-field-col review-after"><div class="review-col-tag">This browser</div><div>${esc(String(r.after))}</div></div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('reviewKeepPublished').textContent = item.type === 'added' ? "Don't add them" : 'Keep published';
+      document.getElementById('reviewUseVersion').textContent = item.type === 'added' ? 'Add them' : 'Use this version';
+      document.getElementById('reviewEditPerson').style.display = item.type === 'modified' ? 'block' : 'none';
+      document.getElementById('reviewPrevBtn').disabled = reviewIndex === 0;
+      document.getElementById('reviewNextBtn').textContent = (reviewIndex === reviewItems.length - 1) ? 'Finish' : 'Next \u2192';
+    }
+    function goToNextCardOrFinish(){
+      if(reviewIndex < reviewItems.length - 1){ reviewIndex++; renderReviewCard(); }
+      else finishReview();
+    }
+    function finishReview(){
+      document.getElementById('recoveryReviewOverlay').classList.remove('active');
+      rebuildIndex();
+      render(applyCurrentFilter());
+      saveToLocalStorage();
+      const used = reviewItems.filter(it => it.decision === 'use' || it.decision === 'edited').length;
+      if(used){
+        showPublishProgress(`Applied ${used} of ${reviewItems.length} \u2014 tap Save (top right) to publish these changes.`);
+        hidePublishProgress(6000);
+      }
+    }
+    document.getElementById('reviewRecoveryBtn').onclick = () => {
+      reviewIndex = 0;
+      document.getElementById('recoveryOverlay').classList.remove('active');
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      renderReviewCard();
+    };
+    document.getElementById('reviewKeepPublished').onclick = () => {
+      reviewItems[reviewIndex].decision = 'keep';
+      goToNextCardOrFinish();
+    };
+    document.getElementById('reviewUseVersion').onclick = () => {
+      const item = reviewItems[reviewIndex];
+      item.decision = 'use';
+      const existingIdx = PEOPLE.findIndex(p => p.id === item.id);
+      if(existingIdx === -1){ PEOPLE.push(JSON.parse(JSON.stringify(item.oldP))); } else { PEOPLE[existingIdx] = JSON.parse(JSON.stringify(item.oldP)); }
+      rebuildIndex();
+      render(applyCurrentFilter());
+      goToNextCardOrFinish();
+    };
+    document.getElementById('reviewEditPerson').onclick = () => {
+      const item = reviewItems[reviewIndex];
+      if(item.type !== 'modified') return;
+      reviewEditContext = { index: reviewIndex };
+      document.getElementById('recoveryReviewOverlay').classList.remove('active');
+      currentId = item.id;
+      editing = true;
+      draft = JSON.parse(JSON.stringify(item.oldP));
+      document.getElementById('overlay').classList.add('active');
+      refreshSheet();
+      showPublishProgress('Editing this browser\'s version \u2014 make any changes, then tap "Save changes".');
+      hidePublishProgress(6000);
+    };
+    document.getElementById('reviewPrevBtn').onclick = () => { if(reviewIndex > 0){ reviewIndex--; renderReviewCard(); } };
+    document.getElementById('reviewNextBtn').onclick = goToNextCardOrFinish;
+    document.getElementById('reviewClose').onclick = finishReview;
+    document.getElementById('recoveryReviewOverlay').addEventListener('click', (e) => { if(e.target.id==='recoveryReviewOverlay') finishReview(); });
+
+    // Resume the review stepper after "Edit" sends the person through the normal,
+    // full-featured editor. saveEdit's own handler (defined earlier) already applies
+    // the edit to PEOPLE and saves it -- these just pick the review flow back up.
+    document.getElementById('saveEdit').addEventListener('click', () => {
+      if(!reviewEditContext) return;
+      const idx = reviewEditContext.index;
+      reviewEditContext = null;
+      if(reviewItems[idx]) reviewItems[idx].decision = 'edited';
+      document.getElementById('overlay').classList.remove('active');
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      reviewIndex = idx;
+      goToNextCardOrFinish();
+    });
+    function resumeReviewWithoutDeciding(){
+      if(!reviewEditContext) return;
+      const idx = reviewEditContext.index;
+      reviewEditContext = null;
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      reviewIndex = idx;
+      renderReviewCard();
+    }
+    document.getElementById('closeSheet').addEventListener('click', resumeReviewWithoutDeciding);
+    document.getElementById('overlay').addEventListener('click', (e) => { if(e.target.id==='overlay') resumeReviewWithoutDeciding(); });
+    document.getElementById('donePersonBtn').addEventListener('click', resumeReviewWithoutDeciding);
   }
 }
 
@@ -2364,6 +2548,7 @@ const MODAL_CONFIG = [
   { id: 'photoViewerOverlay', closeBtnId: 'viewerBack' },
   { id: 'deleteConfirmOverlay', closeBtnId: 'cancelDelete' },
   { id: 'recoveryOverlay', closeBtnId: 'discardRecovery' },
+  { id: 'recoveryReviewOverlay', closeBtnId: 'reviewClose' },
   { id: 'settingsOverlay', closeBtnId: 'settingsClose' },
   { id: 'newOverlay', closeBtnId: 'closeNewSheet' },
   { id: 'overlay', closeBtnId: 'closeSheet' },
