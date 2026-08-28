@@ -1,0 +1,2639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=6, user-scalable=yes">
+<title>Our Family Tree</title>
+
+<!-- These let WhatsApp (and similar apps) show a nice preview card with a title,
+     description, and thumbnail image instead of a plain blue link. -->
+<meta property="og:title" content="Our Family Tree">
+<meta property="og:description" content="Tap to browse our family tree, photos, and everyone's stories.">
+<meta property="og:image" content="https://abmb649-gh.github.io/Family-Tree/cover.jpg">
+<meta property="og:url" content="https://abmb649-gh.github.io/Family-Tree/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<style>
+  :root{
+    --font-scale: 1;
+    --bg: #fbf6ec;
+    --card-bg: #ffffff;
+    --ink: #2b241a;
+    --accent: #8a6d3b;
+    --accent-dark: #5f4a24;
+    --line: #e3d7bd;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    font-size:calc(17px * var(--font-scale));
+    -webkit-text-size-adjust:100%;
+    overscroll-behavior:none;
+  }
+  header{
+    position:sticky;top:0;z-index:50;
+    background:#f7f6f3;
+    color:var(--ink);
+    padding:10px 16px 8px;
+    border-bottom:1px solid #e0ddd6;
+    box-shadow:0 1px 4px rgba(0,0,0,.05);
+    overflow:hidden;
+  }
+  .header-bg-pattern{
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    opacity:.55;
+  }
+  header > *{ position:relative; z-index:1; }
+  .header-top-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  header h1{ margin:0; font-size:1.1em; letter-spacing:.3px; color:var(--accent-dark); font-weight:800; white-space:nowrap; }
+  .header-btn-group{ display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end; }
+  .add-person-btn-top{
+    flex-shrink:0; background:#fff; color:var(--accent-dark); border:1px solid var(--line);
+    border-radius:9px; padding:7px 10px; font-size:.82em; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .save-header-btn{
+    flex-shrink:0; background:var(--accent-dark); color:#fff; border:1px solid var(--accent-dark);
+    border-radius:9px; padding:7px 12px; font-size:.82em; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .save-header-btn.pending{ background:#c9962f; border-color:#c9962f; }
+  .settings-header-btn{
+    flex-shrink:0; background:#fff; color:var(--accent-dark); border:1px solid var(--line);
+    border-radius:9px; padding:7px 10px; font-size:.82em; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .connection-dot{
+    display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:5px;
+    background:#c0392b;
+  }
+  .connection-dot.connected{ background:#4a8f3c; }
+  .toolbar-combined{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:2px; }
+  .search-wrap-narrow{ flex:1 1 110px; min-width:90px; }
+  #peopleSearchBox{
+    width:100%; padding:9px 12px; font-size:.92em;
+    border-radius:9px; border:1px solid var(--line); background:#fff; color:var(--ink);
+  }
+  .tabs-compact{
+    display:flex; flex:2 1 210px; background:#fff; border:1px solid var(--line);
+    border-radius:9px; overflow:hidden;
+  }
+  .tab-c{ flex:1; text-align:center; padding:9px 4px; font-size:.86em; font-weight:600; color:#9a8c6d; cursor:pointer; white-space:nowrap; }
+  .tab-c.active{ background:var(--accent-dark); color:#fff; }
+  .sort-controls{ display:flex; gap:6px; flex:1 1 150px; align-items:center; }
+  .sort-controls select{
+    flex:1; min-width:0; padding:8px 6px; border-radius:9px; border:1px solid var(--line);
+    background:#fff; color:var(--ink); font-size:.82em; font-family:inherit;
+  }
+  .sort-controls .sort-dir-btn{
+    flex-shrink:0; background:#fff; border:1px solid var(--line); color:var(--accent-dark);
+    padding:8px 9px; border-radius:9px; font-size:.8em; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  main{padding:14px;}
+  #people-count{ text-align:center; color:#8a7a56; margin-bottom:10px; font-size:.9em; }
+  .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--card-min-width, 140px),1fr)); gap:12px; touch-action:pan-y; }
+  .card{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
+    padding:12px 8px 14px; text-align:center; cursor:pointer;
+    transition:transform .1s ease, box-shadow .15s ease, border-color .15s ease;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);
+  }
+  .card:active{transform:scale(.96);}
+  .card.drag-over{
+    border-color:var(--accent); border-width:2px; background:#fff8ea;
+    box-shadow:0 0 0 4px #e9d9a8;
+  }
+  .avatar{
+    width:78px;height:78px; border-radius:50%; object-fit:cover;
+    margin:0 auto 8px; display:block; border:3px solid var(--line); background:#eee2c8;
+  }
+  .avatar.placeholder{ display:flex; align-items:center; justify-content:center; font-size:1.6em; font-weight:bold; color:var(--accent-dark); }
+  .card .name{ font-weight:700; font-size:.98em; line-height:1.25; word-break:break-word; }
+  .name-nickname{ display:block; font-style:italic; font-weight:600; font-size:.82em; color:#8a7a56; line-height:1.3; }
+  .name-main{ display:block; }
+  .name-maiden{ display:block; font-size:.82em; font-weight:500; color:#8a7a56; line-height:1.3; }
+  .card .dates{ font-size:.8em; color:#8a7a56; margin-top:4px; }
+
+  #tree-view{display:none;}
+  #tree-view.active{display:block;}
+  #people-view.active{display:block;}
+  #people-view{display:none;}
+  .tree-scroll{ overflow:auto; overscroll-behavior:contain; border:1px solid var(--line); border-radius:12px; background:#fff; -webkit-overflow-scrolling:touch; }
+  .tree-scroll img{ display:block; width:2200px; max-width:none; }
+  .zoom-tip{ text-align:center; margin-bottom:10px; color:#6b5c40; font-size:.95em; }
+
+  #surnames-view{ display:none; }
+  #surnames-view.active{ display:block; }
+  .textbtn2{
+    background:var(--bg); border:1px solid var(--line); color:var(--accent-dark);
+    font-size:.85em; font-weight:700; padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .sn-list{ display:flex; flex-direction:column; gap:8px; }
+  .sn-item{
+    background:var(--card-bg); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; font-weight:700; font-size:1.02em;
+    display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+  }
+  .sn-count{ font-weight:500; font-size:.78em; color:#a3946f; }
+  .dc-wrap{ overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:6px 0 24px; }
+  .dc-person{
+    background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
+    padding:6px 6px; text-align:center; cursor:pointer; width:92px; flex-shrink:0;
+  }
+  .dc-person.dc-root{ border-color:var(--accent); border-width:2.5px; background:#fff8ea; }
+  .dc-node{
+    position:absolute; background:var(--card-bg); border:1.5px solid var(--line); border-radius:12px;
+    padding:6px 6px; text-align:center; cursor:pointer;
+  }
+  .dc-node.dc-root{ border-color:var(--accent); border-width:2.5px; background:#fff8ea; }
+  .dc-avatar{ width:40px; height:40px; border-radius:50%; object-fit:cover; margin:0 auto 4px;
+    display:block; border:2px solid var(--line); background:#eee2c8; }
+  .dc-avatar.dc-placeholder{ display:flex; align-items:center; justify-content:center;
+    font-weight:700; color:var(--accent-dark); font-size:.9em; }
+  .dc-pname{ font-size:.68em; font-weight:700; line-height:1.15; }
+  .dc-pdates{ font-size:.62em; color:#8a7a56; margin-top:1px; }
+
+  .dc-tier{ display:flex; justify-content:center; align-items:center; gap:8px; margin:0 12px 4px; flex-wrap:wrap; }
+  .dc-tier-label{ text-align:center; font-size:.72em; text-transform:uppercase; letter-spacing:.06em;
+    color:#a3946f; margin:10px 0 4px; }
+  .dc-couple{ display:flex; align-items:center; }
+  .dc-spouse-link{ width:14px; height:2px; background:var(--accent); flex-shrink:0; }
+  .dc-vline{ width:2px; height:10px; background:var(--line); margin:0 auto; }
+
+  .overlay{ position:fixed;inset:0; height:100vh; height:100dvh; background:rgba(20,15,5,.55); display:none; align-items:center; justify-content:center; padding:20px 0; z-index:100; }
+  .settings-field{ text-align:left; margin-bottom:14px; }
+  .settings-field label{ display:block; font-size:.82em; font-weight:700; color:var(--accent-dark); margin-bottom:5px; }
+  .settings-field input{
+    width:100%; padding:11px 12px; border-radius:10px; border:1px solid var(--line);
+    font-size:.95em; font-family:inherit; background:#fff; color:var(--ink);
+  }
+  .settings-field .hint{ font-size:.78em; color:#a3946f; margin-top:4px; }
+  .settings-status{ font-size:.85em; margin:10px 0; padding:10px 12px; border-radius:10px; text-align:left; }
+  .settings-status.ok{ background:#eaf3e6; color:#3a6b2c; }
+  .settings-status.err{ background:#fbe9e5; color:#a33a24; }
+  .settings-status.info{ background:#fff6e0; color:#7a6323; }
+  .publish-progress{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:300;
+    background:var(--accent-dark); color:#fff; padding:10px 18px; border-radius:20px;
+    font-size:.85em; font-weight:600; box-shadow:0 4px 12px rgba(0,0,0,.25); display:none;
+  }
+  .publish-progress.active{ display:block; }
+  .overlay.active{display:flex;}
+  .sheet{ background:#fff; width:100%; max-width:520px; border-radius:22px; overflow:hidden; transition:box-shadow .15s ease, background .15s ease; }
+  .sheet-inner{ padding:22px 20px calc(30px + env(safe-area-inset-bottom, 0px)); text-align:center; max-height:76vh; max-height:76dvh; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+  .sheet-inner::-webkit-scrollbar{ width:8px; }
+  .sheet-inner::-webkit-scrollbar-track{ background:transparent; }
+  .sheet-inner::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+  .sheet-inner::-webkit-scrollbar-thumb:hover{ background:var(--accent); }
+  .sheet.sheet-drag-over{ background:#fff8ea; box-shadow:inset 0 0 0 3px var(--accent); }
+  .sheet-topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .sheet .close{ background:var(--line); border:none; border-radius:50%; width:38px;height:38px; font-size:1.2em; color:var(--accent-dark); cursor:pointer; margin-left:auto; }
+  .back-btn{
+    background:var(--line); border:none; border-radius:50%; width:38px;height:38px;
+    font-size:1.3em; font-weight:700; color:var(--accent-dark); cursor:pointer;
+  }
+  .avatar-big{ width:170px;height:170px; border-radius:50%; object-fit:cover; margin:0 auto 16px; display:block; border:4px solid var(--line); background:#eee2c8; }
+  .avatar-big.placeholder{ display:flex;align-items:center;justify-content:center; font-size:3em;font-weight:bold;color:var(--accent-dark); }
+  .sheet h2{ margin:0 0 8px; font-size:1.5em; color:var(--accent-dark); }
+  #nameEditInput{
+    width:100%; font-size:1.5em; font-weight:700; color:var(--accent-dark);
+    text-align:center; border:2px solid var(--accent); border-radius:10px;
+    padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
+  }
+  #datesEditInput{
+    width:100%; font-size:1.05em; color:var(--accent-dark);
+    text-align:center; border:2px solid var(--accent); border-radius:10px;
+    padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
+  }
+  .dates-big{ font-size:1.15em; color:#7a6a48; margin-bottom:6px; }
+
+  .edit-toggle{
+    margin:10px auto 0; display:inline-flex; align-items:center; gap:6px;
+    background:var(--bg); border:1px solid var(--line); border-radius:20px;
+    padding:8px 16px; font-size:.85em; font-weight:700; color:var(--accent-dark); cursor:pointer;
+  }
+  .edit-toggle.on{ background:var(--accent-dark); color:#fff; }
+
+  .rel-section{ text-align:left; margin-top:18px; }
+  .rel-title{ font-size:.85em; text-transform:uppercase; letter-spacing:.06em; color:#a3946f; font-weight:700; margin:16px 0 8px; display:flex; justify-content:space-between; align-items:center; }
+  .rel-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+  .chip{ background:var(--bg); border:1px solid var(--line); border-radius:20px; padding:6px 14px 6px 6px; font-size:.95em; cursor:pointer; font-weight:600; color:var(--accent-dark); display:inline-flex; align-items:center; gap:8px; }
+  .chip-drag-handle{ cursor:grab; color:#b3a583; font-size:1.1em; padding:0 2px; touch-action:none; }
+  .chip-dragging{ opacity:.55; box-shadow:0 4px 12px rgba(0,0,0,.2); }
+  .chip-self{
+    cursor:default; opacity:.6; background:transparent;
+    border:1.5px dashed var(--line); color:#a3946f;
+  }
+  .chip-avatar{
+    width:28px; height:28px; border-radius:50%; object-fit:cover;
+    flex-shrink:0; background:#eee2c8; border:1px solid var(--line);
+  }
+  .chip-avatar-placeholder{
+    display:flex; align-items:center; justify-content:center;
+    font-size:.7em; font-weight:800; color:var(--accent-dark);
+  }
+  .chip-name{ line-height:1.2; display:flex; flex-direction:column; }
+  .chip-name-nick{ display:block; font-style:italic; font-weight:600; font-size:.85em; color:#a3946f; }
+  .chip-name-main{ display:block; }
+  .chip-name-maiden{ display:block; font-size:.85em; font-weight:500; color:#a3946f; }
+  .chip:active{ background:var(--line); }
+  .chip .rm{ color:#b3452f; font-weight:900; padding-left:2px; }
+  .no-data{ color:#b3a583; font-size:.9em; font-style:italic; }
+  .siblings-edit-hint{ width:100%; font-size:.78em; color:#a3946f; margin-top:6px; line-height:1.4; }
+  .recovery-item{ display:flex; gap:10px; align-items:flex-start; padding:10px 4px; border-bottom:1px solid var(--line); }
+  .recovery-item input[type="checkbox"]{ margin-top:3px; width:18px; height:18px; flex-shrink:0; }
+  .recovery-item-name{ font-weight:700; color:var(--accent-dark); }
+  .recovery-item-summary{ font-size:.85em; color:#7a6a48; margin-top:2px; }
+  .recovery-item-badge{ font-size:.72em; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:6px; }
+  .recovery-item-badge.added{ background:#e3f0dd; color:#3d6b2f; }
+  .recovery-item-badge.modified{ background:#fff0d1; color:#8a6417; }
+  .recovery-item-badge.decided{ background:#e6e6e6; color:#555; }
+
+  .save-bar-triple button{ font-size:.82em; padding:11px 6px; }
+  .review-btn{ background:#fff; }
+
+  .review-field-row{ border-bottom:1px solid var(--line); padding:10px 0; }
+  .review-field-row:last-child{ border-bottom:none; }
+  .review-field-label{ font-weight:700; color:var(--accent-dark); font-size:.85em; margin-bottom:6px; }
+  .review-field-cols{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .review-field-col{ background:var(--bg); border-radius:10px; padding:8px 10px; font-size:.88em; color:var(--ink); line-height:1.4; word-break:break-word; }
+  .review-field-col.review-after{ background:#fff8ea; border:1px solid var(--accent); }
+  .review-col-tag{ font-size:.68em; font-weight:800; text-transform:uppercase; letter-spacing:.4px; color:#8a7a56; margin-bottom:3px; }
+
+  .add-chip-btn{
+    background:none; border:1.5px dashed var(--accent); border-radius:20px;
+    padding:8px 14px; font-size:.9em; font-weight:700; color:var(--accent); cursor:pointer;
+  }
+  .add-search{ margin-top:8px; display:none; }
+  .add-search.active{ display:block; }
+  .add-search input{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--line);
+    font-size:.95em; margin-bottom:6px; font-family:inherit;
+  }
+  .add-results{ max-height:160px; overflow:auto; border:1px solid var(--line); border-radius:10px; }
+  .add-result-item{ padding:10px 12px; font-size:.9em; cursor:pointer; border-bottom:1px solid var(--line); text-align:left; }
+  .add-result-item:last-child{ border-bottom:none; }
+  .create-new-item{ color:var(--accent-dark); background:#fbf6ec; font-weight:600; }
+  .create-new-item strong{ font-weight:800; }
+  .add-result-item:active{ background:var(--bg); }
+
+  .review-nav{ margin-top:24px; display:flex; gap:8px; }
+  .review-nav-btn{
+    flex:1; padding:12px 6px; border-radius:12px; border:1px solid var(--line);
+    background:#fff; color:var(--accent-dark); font-size:.85em; font-weight:700; cursor:pointer;
+  }
+  .review-nav-btn:disabled{ opacity:.4; cursor:default; }
+  .review-nav-btn#donePersonBtn{ background:var(--accent-dark); color:#fff; border-color:var(--accent-dark); }
+  .delete-person-btn{
+    margin-top:14px; width:100%; padding:12px; border-radius:12px;
+    border:1px solid #e0b3a3; background:#fbf0ec; color:#b3452f;
+    font-size:.9em; font-weight:700; cursor:pointer;
+  }
+
+  .verify-banner{ background:#fff6e0; border:1px solid #e9d9a8; color:#7a6323; border-radius:12px; padding:10px 14px; font-size:.88em; margin-bottom:14px; }
+
+  .save-bar{
+    position:sticky; bottom:0; background:#fff; border-top:1px solid var(--line);
+    padding:12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+    margin:20px -20px calc(-30px - env(safe-area-inset-bottom, 0px));
+    display:none; gap:10px;
+  }
+  .save-bar.active{ display:flex; }
+  .save-bar button{
+    flex:1; padding:12px; border-radius:12px; border:none; font-weight:700; font-size:.95em; cursor:pointer;
+  }
+  .save-bar .save-btn{ background:var(--accent-dark); color:#fff; }
+  .save-bar .cancel-btn{ background:var(--bg); color:var(--accent-dark); border:1px solid var(--line); }
+
+  .photo-upload-btn{
+    display:inline-block; background:var(--bg); border:1px solid var(--line);
+    color:var(--accent-dark); font-size:.85em; font-weight:700;
+    padding:8px 14px; border-radius:20px; cursor:pointer;
+  }
+  .photo-gallery{
+    display:flex; gap:10px; overflow-x:auto; padding:4px 2px 10px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .gallery-item{
+    position:relative; flex-shrink:0; width:84px; height:84px;
+  }
+  .gallery-item img{
+    width:84px; height:84px; border-radius:50%; object-fit:cover;
+    border:3px solid var(--line); cursor:pointer; display:block;
+  }
+  .gallery-item.is-default img{ border-color: var(--accent); border-width:3px; }
+  .gallery-rm{
+    position:absolute; top:-4px; right:-4px; background:#b3452f; color:#fff;
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:.75em; font-weight:900; cursor:pointer;
+    box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .gallery-star{
+    position:absolute; bottom:-2px; left:50%; transform:translateX(-50%);
+    background:var(--accent); color:#fff; font-size:.7em; border-radius:10px;
+    padding:1px 6px; box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .view-gallery{ justify-content:center; padding:4px 2px 4px; }
+  .gallery-item.view-only{ width:96px; height:96px; }
+  .gallery-item.view-only img{
+    width:96px; height:96px; border-color:var(--line); border-width:3px;
+  }
+
+  .photo-viewer-overlay{
+    position:fixed; inset:0; background:rgba(10,8,4,.95); z-index:200;
+    display:none; align-items:center; justify-content:center;
+  }
+  .photo-viewer-overlay.active{ display:flex; }
+  .viewer-img{ max-width:92vw; max-height:88vh; object-fit:contain; display:block; }
+  .viewer-back{
+    position:absolute; top:18px; left:16px; background:#ffffff22; border:none;
+    color:#fff; width:42px; height:42px; border-radius:50%; font-size:1.4em;
+    cursor:pointer; z-index:2; display:flex; align-items:center; justify-content:center;
+  }
+  .viewer-nav{
+    position:absolute; top:50%; transform:translateY(-50%); background:#ffffff22;
+    border:none; color:#fff; width:48px; height:48px; border-radius:50%;
+    font-size:2em; line-height:1; cursor:pointer; z-index:2;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .viewer-prev{ left:14px; }
+  .viewer-next{ right:14px; }
+
+  #newNameInput, #newDatesInput{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    font-size:1em; margin-bottom:10px; font-family:inherit; text-align:center;
+  }
+  #newNameInput{ font-weight:700; font-size:1.2em; color:var(--accent-dark); }
+  .new-person-label{
+    font-size:.8em; text-transform:uppercase; letter-spacing:.05em; color:#a3946f;
+    font-weight:700; text-align:left; margin:4px 0 6px;
+  }
+
+  footer{ text-align:center; color:#a3947a; font-size:.8em; padding:24px 10px 40px; }
+  /* In landscape, phones have a lot of extra width but not much extra height --
+     shrink the minimum card size just for landscape so an extra column fits,
+     without touching how things look in portrait (the primary use case). Pinch-zoom
+     (see JS) sets --card-min-width directly and always takes precedence over this. */
+  @media (orientation: landscape){
+    :root{ --card-min-width: 115px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="header-bg-pattern" width="100%" height="100%" preserveAspectRatio="none">
+    <defs>
+      <pattern id="familyDots" x="0" y="0" width="130" height="90" patternUnits="userSpaceOnUse">
+        <circle cx="20" cy="18" r="3.4" fill="#8a6d3b"/>
+        <circle cx="65" cy="10" r="3.4" fill="#8a6d3b"/>
+        <circle cx="20" cy="55" r="3.4" fill="#8a6d3b"/>
+        <circle cx="55" cy="60" r="3.4" fill="#8a6d3b"/>
+        <circle cx="100" cy="40" r="3.4" fill="#8a6d3b"/>
+        <circle cx="110" cy="78" r="3.4" fill="#8a6d3b"/>
+        <line x1="20" y1="18" x2="65" y2="10" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="20" y1="18" x2="20" y2="55" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="20" y1="55" x2="55" y2="60" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="65" y1="10" x2="100" y2="40" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="100" y1="40" x2="110" y2="78" stroke="#8a6d3b" stroke-width="1"/>
+        <line x1="55" y1="60" x2="100" y2="40" stroke="#8a6d3b" stroke-width="1"/>
+      </pattern>
+      <linearGradient id="fadeOut" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#fff" stop-opacity="1"/>
+        <stop offset="100%" stop-color="#fff" stop-opacity="0.25"/>
+      </linearGradient>
+      <mask id="fadeMask">
+        <rect width="100%" height="100%" fill="url(#fadeOut)"/>
+      </mask>
+    </defs>
+    <rect width="100%" height="100%" fill="url(#familyDots)" mask="url(#fadeMask)"/>
+  </svg>
+  <div class="header-top-row">
+    <h1>Our Family Tree</h1>
+    <div class="header-btn-group">
+      <button class="add-person-btn-top" id="addPersonBtn">+ Add new</button>
+      <button class="settings-header-btn" id="settingsBtn" title="Connection settings">Setup</button>
+      <button class="save-header-btn" id="saveFileBtn" title="Publish your changes">&#128190; Save</button>
+    </div>
+  </div>
+  <div class="toolbar-combined">
+    <div class="search-wrap-narrow"><input id="peopleSearchBox" type="text" placeholder="Search a name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+    <div class="tabs-compact">
+      <div class="tab-c active" data-tab="people">People</div>
+      <div class="tab-c" data-tab="surnames">By Surname</div>
+      <div class="tab-c" data-tab="tree">Full Tree</div>
+    </div>
+    <div class="sort-controls" id="sortControls">
+      <select id="sortField">
+        <option value="name">Name</option>
+        <option value="nickname">Nickname</option>
+        <option value="surname">Surname</option>
+        <option value="dob">Date of birth</option>
+      </select>
+      <button id="sortDirBtn" class="sort-dir-btn" title="Toggle ascending/descending">&#8593; A&ndash;Z</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div id="people-view" class="active">
+    <div id="people-count"></div>
+    <div class="drop-hint">Tip: drag and drop a photo onto anyone's card to add it to their profile</div>
+    <div class="grid" id="grid"></div>
+    <div class="verify-banner">Parents / siblings / children are a best guess based on the chart layout. Open anyone's page, tap "Edit", and fix names or connections directly &mdash; then tap "Save" top right to save your changes.</div>
+  </div>
+
+  <div id="surnames-view">
+    <div id="surnames-back-row" style="display:none; margin-bottom:12px;">
+      <button class="textbtn2" id="surnamesBackBtn">&#8592; Back to surnames</button>
+    </div>
+    <div id="surnames-body"></div>
+  </div>
+
+  <div id="tree-view">
+    <div class="zoom-tip">Pinch with two fingers to zoom in, then drag to look around.</div>
+    <div class="tree-scroll"><img id="tree-img" src="tree.jpg" alt="Full family tree chart"></div>
+  </div>
+</main>
+
+<footer>Made with love for the family &#10084;&#65039;</footer>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+   <div class="sheet-inner">
+    <div class="sheet-topbar">
+      <button class="back-btn" id="backBtn" style="display:none;">&#8592;</button>
+      <button class="close" id="closeSheet">&#10005;</button>
+    </div>
+    <div id="sheetAvatar"></div>
+    <div id="photoEditRow" style="display:none; text-align:center; margin:-10px 0 14px;">
+      <label class="photo-upload-btn" for="photoFileInput">&#128247; Add photos</label>
+      <input type="file" id="photoFileInput" accept="image/*" multiple style="display:none;">
+    </div>
+    <input id="nameEditInput" type="text">
+    <h2 id="sheetName"></h2>
+    <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+    <div class="dates-big" id="sheetDates"></div>
+
+    <div style="text-align:center; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+      <div class="edit-toggle" id="editToggle">&#9998; Edit this person</div>
+      <label class="edit-toggle" for="quickPhotoFileInput">&#128247; Add photos</label>
+      <input type="file" id="quickPhotoFileInput" accept="image/*" multiple style="display:none;">
+    </div>
+
+    <div class="rel-section">
+      <div class="rel-title"><span>Parents</span></div>
+      <div class="rel-chips" id="relParents"></div>
+      <div class="add-search" id="addSearch-parents">
+        <input type="text" placeholder="Search a name to add..." data-field="parents">
+        <div class="add-results" data-field="parents"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Spouse</span></div>
+      <div class="rel-chips" id="relSpouse"></div>
+      <div class="add-search" id="addSearch-spouse">
+        <input type="text" placeholder="Search a name to add..." data-field="spouse">
+        <div class="add-results" data-field="spouse"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Siblings</span></div>
+      <div class="rel-chips" id="relSiblings"></div>
+      <div class="add-search" id="addSearch-siblings">
+        <input type="text" placeholder="Search a name to add..." data-field="siblings">
+        <div class="add-results" data-field="siblings"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Children</span></div>
+      <div class="rel-chips" id="relChildren"></div>
+      <div class="add-search" id="addSearch-children">
+        <input type="text" placeholder="Search a name to add..." data-field="children">
+        <div class="add-results" data-field="children"></div>
+      </div>
+    </div>
+
+    <div class="save-bar" id="saveBar">
+      <button class="cancel-btn" id="cancelEdit">Cancel</button>
+      <button class="save-btn" id="saveEdit">Save changes</button>
+    </div>
+    <button class="delete-person-btn" id="deletePersonBtn" style="display:none;">&#128465; Delete this person</button>
+
+    <div class="review-nav">
+      <button class="review-nav-btn" id="prevPersonBtn">&#8592; Previous</button>
+      <button class="review-nav-btn" id="donePersonBtn">Done</button>
+      <button class="review-nav-btn" id="nextPersonBtn">Next &#8594;</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="deleteConfirmOverlay">
+  <div class="sheet" style="max-width:420px;">
+   <div class="sheet-inner">
+    <h2 style="margin-top:0;">Delete this person?</h2>
+    <p id="deleteConfirmText" style="color:var(--ink); line-height:1.5;"></p>
+    <p style="color:#8a7a56; font-size:.9em;">This removes them completely and clears them from anyone else's parents, spouse, siblings, or children. This can't be undone.</p>
+    <div class="save-bar active">
+      <button class="cancel-btn" id="cancelDelete">Cancel</button>
+      <button class="save-btn" id="confirmDelete" style="background:#b3452f;">Delete</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="photo-viewer-overlay" id="photoViewerOverlay">
+  <button class="viewer-back" id="viewerBack">&#8592;</button>
+  <button class="viewer-nav viewer-prev" id="viewerPrev">&#8249;</button>
+  <img class="viewer-img" id="viewerImg" src="" alt="">
+  <button class="viewer-nav viewer-next" id="viewerNext">&#8250;</button>
+</div>
+
+<div class="publish-progress" id="publishProgress"></div>
+
+<div class="overlay" id="recoveryOverlay">
+  <div class="sheet" style="max-width:520px;">
+   <div class="sheet-inner">
+    <h2 style="margin-top:0;">Unpublished changes found</h2>
+    <p style="color:var(--ink); line-height:1.5; text-align:left;">
+      This browser has some local changes that don't match what's currently published
+      &mdash; possibly real edits that never made it online, or just an old leftover from
+      an earlier visit.
+    </p>
+    <p id="recoveryDetail" style="color:#8a7a56; font-size:.88em; text-align:left;"></p>
+    <div id="recoveryChecklist" style="max-height:40vh; overflow:auto; text-align:left;"></div>
+    <div class="save-bar active" id="recoverySaveBar">
+      <button class="cancel-btn" id="discardRecovery">Discard</button>
+      <button class="textbtn2 review-btn" id="reviewRecoveryBtn" style="display:none;">Review</button>
+      <button class="save-btn" id="restoreRecovery">Restore &amp; review</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="recoveryReviewOverlay">
+  <div class="sheet" style="max-width:560px;">
+   <div class="sheet-inner">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span id="reviewCounter" style="font-size:.85em; font-weight:700; color:var(--accent-dark);"></span>
+      <button class="close" id="reviewClose" style="width:32px;height:32px;font-size:1em;">&#10005;</button>
+    </div>
+    <div id="reviewCardName" style="text-align:left; margin-bottom:10px;"></div>
+    <p id="reviewCardNote" style="color:#8a7a56; font-size:.85em; text-align:left; margin:-4px 0 10px; display:none;"></p>
+    <div id="reviewCardBody" style="text-align:left;"></div>
+    <div class="save-bar active save-bar-triple" style="flex-wrap:wrap;">
+      <button class="cancel-btn" id="reviewKeepPublished">Keep published</button>
+      <button class="textbtn2 review-btn" id="reviewEditPerson">Edit</button>
+      <button class="save-btn" id="reviewUseVersion">Use this version</button>
+    </div>
+    <div class="review-nav" style="margin-top:14px;">
+      <button class="review-nav-btn" id="reviewPrevBtn">&#8592; Prev</button>
+      <button class="review-nav-btn" id="reviewNextBtn">Next &#8594;</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet" style="max-width:440px;">
+   <div class="sheet-inner">
+    <div class="sheet-topbar"><button class="close" id="settingsClose">&#10005;</button></div>
+    <h2 style="margin-top:0;">Family site connection</h2>
+    <p style="color:#8a7a56; font-size:.88em; text-align:left; line-height:1.5;">
+      Connect this app to the family website on GitHub so tapping "Save" publishes your
+      changes for everyone, straight from your phone.
+    </p>
+    <div id="settingsStatus"></div>
+    <div class="settings-field">
+      <label for="ghOwner">GitHub username</label>
+      <input id="ghOwner" type="text" autocapitalize="off" autocorrect="off" placeholder="e.g. markusburger">
+    </div>
+    <div class="settings-field">
+      <label for="ghRepo">Repository name</label>
+      <input id="ghRepo" type="text" autocapitalize="off" autocorrect="off" placeholder="e.g. family-tree">
+    </div>
+    <div class="settings-field">
+      <label for="ghToken">Access token</label>
+      <input id="ghToken" type="password" autocapitalize="off" autocorrect="off" placeholder="paste your token here">
+      <div class="hint">Kept only on this phone &mdash; never sent anywhere except GitHub itself.</div>
+    </div>
+    <div class="save-bar active">
+      <button class="cancel-btn" id="ghDisconnect">Disconnect</button>
+      <button class="save-btn" id="ghTestConnect">Connect</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="newOverlay">
+  <div class="sheet">
+   <div class="sheet-inner">
+    <button class="close" id="closeNewSheet">&#10005;</button>
+    <h2 style="margin-top:0;">Add someone new</h2>
+
+    <div id="newPhotoPreview" style="text-align:center; margin-bottom:8px;"></div>
+    <div style="text-align:center; margin-bottom:14px;">
+      <label class="photo-upload-btn" for="newPhotoFileInput">&#128247; Add photos (optional)</label>
+      <input type="file" id="newPhotoFileInput" accept="image/*" multiple style="display:none;">
+    </div>
+
+    <div class="new-person-label">Name</div>
+    <input id="newNameInput" type="text" placeholder="Full name">
+    <div class="new-person-label">Dates (optional)</div>
+    <input id="newDatesInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+
+    <div class="rel-section">
+      <div class="rel-title"><span>Parents</span></div>
+      <div class="rel-chips" id="newRelParents"></div>
+      <div class="add-search" id="addSearch-new-parents">
+        <input type="text" placeholder="Search a name to add..." data-field="parents" data-mode="new">
+        <div class="add-results" data-field="parents" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Spouse</span></div>
+      <div class="rel-chips" id="newRelSpouse"></div>
+      <div class="add-search" id="addSearch-new-spouse">
+        <input type="text" placeholder="Search a name to add..." data-field="spouse" data-mode="new">
+        <div class="add-results" data-field="spouse" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Siblings</span></div>
+      <div class="rel-chips" id="newRelSiblings"></div>
+      <div class="siblings-edit-hint">Picking someone here sets this new person's Parents to match theirs &mdash; check the Parents section above once picked.</div>
+      <div class="add-search" id="addSearch-new-siblings">
+        <input type="text" placeholder="Search a name to add..." data-field="siblings" data-mode="new">
+        <div class="add-results" data-field="siblings" data-mode="new"></div>
+      </div>
+    </div>
+    <div class="rel-section">
+      <div class="rel-title"><span>Children</span></div>
+      <div class="rel-chips" id="newRelChildren"></div>
+      <div class="add-search" id="addSearch-new-children">
+        <input type="text" placeholder="Search a name to add..." data-field="children" data-mode="new">
+        <div class="add-results" data-field="children" data-mode="new"></div>
+      </div>
+    </div>
+
+    <div class="save-bar active">
+      <button class="cancel-btn" id="cancelNewPerson">Cancel</button>
+      <button class="save-btn" id="saveNewPerson">Add person</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<script type="module">
+let PEOPLE = [];
+const BY_ID = {};
+function normalizePerson(p){
+  // migrate any legacy single-photo entries (old versions of this file) into the photos array
+  if(!p.photos){ p.photos = p.photo ? [p.photo] : []; }
+  delete p.photo;
+  return p;
+}
+function dedupePeople(){
+  PEOPLE.forEach(normalizePerson);
+  const seen = new Map();
+  PEOPLE.forEach(p => {
+    if(seen.has(p.id)){
+      // merge: keep richer data (union everything) rather than silently dropping
+      const existing = seen.get(p.id);
+      ['photos','spouse','parents','siblings','children'].forEach(f => {
+        existing[f] = Array.from(new Set([...(existing[f]||[]), ...(p[f]||[])]));
+      });
+    } else {
+      seen.set(p.id, p);
+    }
+  });
+  PEOPLE = Array.from(seen.values());
+}
+function recomputeSiblingsAndChildren(){
+  // Children: preserve whatever order is already there (which may have been manually
+  // set via drag-and-drop, useful when birth dates aren't known) -- only add newly
+  // linked children at the end, and drop any that are no longer actually linked.
+  PEOPLE.forEach(p => {
+    const validChildIds = new Set(PEOPLE.filter(c => (c.parents||[]).includes(p.id)).map(c => c.id));
+    const existing = (p.children || []).filter(id => validChildIds.has(id));
+    const existingSet = new Set(existing);
+    const newOnes = [...validChildIds].filter(id => !existingSet.has(id));
+    p.children = [...existing, ...newOnes];
+  });
+
+  // Siblings and children are always derived from Parents -- never stored/edited
+  // independently -- so they can never drift out of sync the way this bug showed.
+  // Ordered to match a parent's Children order where available, so a manual reorder
+  // there is reflected consistently in each sibling's own profile too.
+  const byParentSet = {};
+  PEOPLE.forEach(p => {
+    p.siblings = [];
+    if(p.parents && p.parents.length){
+      const key = [...p.parents].slice().sort((a,b)=>a-b).join(',');
+      if(!byParentSet[key]) byParentSet[key] = [];
+      byParentSet[key].push(p.id);
+    }
+  });
+  Object.values(byParentSet).forEach(group => {
+    const groupSet = new Set(group);
+    let orderedGroup = group;
+    const anyMember = BY_ID[group[0]];
+    const parent = anyMember && anyMember.parents && anyMember.parents.length ? BY_ID[anyMember.parents[0]] : null;
+    if(parent && parent.children){
+      const fromParent = parent.children.filter(id => groupSet.has(id));
+      const remaining = group.filter(id => !fromParent.includes(id));
+      orderedGroup = [...fromParent, ...remaining];
+    }
+    orderedGroup.forEach(id => { BY_ID[id].siblings = orderedGroup.filter(x => x !== id); });
+  });
+}
+function rebuildIndex(){
+  dedupePeople();
+  Object.keys(BY_ID).forEach(k=>delete BY_ID[k]);
+  PEOPLE.forEach(p => BY_ID[p.id] = p);
+  recomputeSiblingsAndChildren();
+}
+
+// The family site's data.json is always the source of truth -- fetched fresh on every
+// visit so everyone sees the latest published version, never a stale local copy.
+try{
+  // Cache-busting query param: GitHub Pages serves through a CDN that can cache files
+  // for a few minutes independently of the browser -- {cache:'no-store'} alone only
+  // controls the browser's own cache, not that CDN layer. Adding a changing query string
+  // forces every layer to treat this as a fresh request every time.
+  const resp = await fetch('data.json?v=' + Date.now(), {cache: 'no-store'});
+  if(!resp.ok) throw new Error('Server responded with ' + resp.status);
+  PEOPLE = await resp.json();
+}catch(err){
+  document.body.innerHTML = `<div style="padding:60px 24px;text-align:center;font-family:-apple-system,sans-serif;color:#5f4a24;max-width:420px;margin:0 auto;">
+    <h2 style="margin-bottom:8px;">Couldn't load the family tree</h2>
+    <p style="color:#8a7a56;">Please check your internet connection and try reloading the page.</p>
+    <p style="font-size:.75em;color:#b3a583;margin-top:16px;">${err.message}</p>
+  </div>`;
+  throw err;
+}
+rebuildIndex();
+
+// A snapshot of PEOPLE exactly as loaded/last published -- used both to write a
+// descriptive commit message (what actually changed since then) and to detect if the
+// live site has been changed by someone else since this tab last knew about it.
+let originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
+let knownDataSha = null;
+
+// Detect unpublished local edits from a previous visit (e.g. a connection failure while
+// publishing, or the tab reloading mid-edit) that never made it into data.json. This is
+// checked now, right after loading fresh data, but only acted on later once all the
+// helper functions below exist. Checked in two layers: an in-progress single-person
+// edit (more recent, more granular) takes priority over the coarser "fully saved but
+// never published" cache.
+let pendingActiveDraft = null;
+let pendingNewDraft = null;
+let pendingRecovery = null;
+try{
+  const activeRaw = localStorage.getItem('familyTreeActiveDraft');
+  if(activeRaw){
+    const parsed = JSON.parse(activeRaw);
+    // ignore anything older than 7 days -- almost certainly abandoned, not worth prompting about
+    if(parsed && parsed.draft && (Date.now() - (parsed.ts||0)) < 7*24*60*60*1000){
+      pendingActiveDraft = parsed;
+    }
+  }
+}catch(e){}
+try{
+  const newRaw = localStorage.getItem('familyTreeNewDraft');
+  if(newRaw){
+    const parsed = JSON.parse(newRaw);
+    const hasContent = parsed && parsed.newDraft && (
+      (parsed.newDraft.name||'').trim() || (parsed.newDraft.dates||'').trim() ||
+      (parsed.newDraft.photos||[]).length || (parsed.newDraft.parents||[]).length ||
+      (parsed.newDraft.spouse||[]).length || (parsed.newDraft.children||[]).length
+    );
+    if(hasContent && (Date.now() - (parsed.ts||0)) < 7*24*60*60*1000){
+      pendingNewDraft = parsed;
+    }
+  }
+}catch(e){}
+try{
+  const cachedRaw = localStorage.getItem('familyTreeEdits_v2');
+  if(cachedRaw){
+    const cachedPeople = JSON.parse(cachedRaw);
+    if(Array.isArray(cachedPeople) && JSON.stringify(cachedPeople) !== JSON.stringify(PEOPLE)){
+      pendingRecovery = cachedPeople;
+    }
+  }
+}catch(e){}
+
+function initials(name){
+  return name.replace(/\(.*?\)/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+}
+function mainPhoto(p){ return (p.photos && p.photos.length) ? p.photos[0] : null; }
+
+// A leading (Xxx)Name = nickname; a trailing Name(Xxx) = maiden name.
+// Splitting them onto their own lines avoids awkward mid-word wraps on narrow tiles.
+function parseDisplayName(name){
+  let core = name;
+  let nickname = null, maiden = null;
+  const lead = core.match(/^\(([^)]+)\)\s*(.*)$/);
+  if(lead){ nickname = lead[1].trim(); core = lead[2]; }
+  const trail = core.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
+  if(trail){ core = trail[1].trim(); maiden = trail[2].trim(); }
+  return { nickname, main: core.trim(), maiden };
+}
+function nameBlockHtml(name, mainCls, nickCls, maidenCls){
+  const { nickname, main, maiden } = parseDisplayName(name);
+  let html = '';
+  if(nickname) html += `<span class="${nickCls}">${nickname}</span>`;
+  html += `<span class="${mainCls}">${main}</span>`;
+  if(maiden) html += `<span class="${maidenCls}">(${maiden})</span>`;
+  return html;
+}
+
+const grid = document.getElementById('grid');
+const countEl = document.getElementById('people-count');
+let sortField = 'name';
+let sortDir = 'asc';
+function sortedList(){
+  const list = [...PEOPLE];
+  list.sort((a,b) => {
+    let cmp = 0;
+    if(sortField === 'name'){
+      cmp = parseDisplayName(a.name).main.localeCompare(parseDisplayName(b.name).main);
+    } else if(sortField === 'nickname'){
+      const an = parseDisplayName(a.name).nickname, bn = parseDisplayName(b.name).nickname;
+      if(!an && !bn) cmp = parseDisplayName(a.name).main.localeCompare(parseDisplayName(b.name).main);
+      else if(!an) cmp = 1;
+      else if(!bn) cmp = -1;
+      else cmp = an.localeCompare(bn);
+    } else if(sortField === 'surname'){
+      cmp = parseSurname(a.name).localeCompare(parseSurname(b.name));
+    } else if(sortField === 'dob'){
+      const da = parseBirthDate(a.dates), db = parseBirthDate(b.dates);
+      if(da==null && db==null) cmp = 0;
+      else if(da==null) cmp = 1;
+      else if(db==null) cmp = -1;
+      else cmp = da - db;
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+  return list;
+}
+function updateSortDirLabel(){
+  const btn = document.getElementById('sortDirBtn');
+  if(sortField === 'dob'){
+    btn.innerHTML = sortDir === 'asc' ? '&#8593; Oldest first' : '&#8595; Newest first';
+  } else {
+    btn.innerHTML = sortDir === 'asc' ? '&#8593; A&ndash;Z' : '&#8595; Z&ndash;A';
+  }
+}
+document.getElementById('sortField').addEventListener('change', (e) => {
+  sortField = e.target.value;
+  updateSortDirLabel();
+  render(applyCurrentFilter());
+});
+document.getElementById('sortDirBtn').onclick = () => {
+  sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  updateSortDirLabel();
+  render(applyCurrentFilter());
+};
+
+function render(list){
+  grid.innerHTML = '';
+  list.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openSheet(p.id);
+    let avatarHtml = mainPhoto(p)
+      ? `<img class="avatar" src="${mainPhoto(p)}" alt="${p.name}">`
+      : `<div class="avatar placeholder">${initials(p.name)}</div>`;
+    card.innerHTML = `${avatarHtml}<div class="name">${nameBlockHtml(p.name,'name-main','name-nickname','name-maiden')}</div><div class="dates">${p.dates || ''}</div>`;
+    attachPhotoDropZone(card, p.id);
+    grid.appendChild(card);
+  });
+  countEl.textContent = list.length + (list.length === 1 ? ' person' : ' people');
+}
+
+// Lets someone drag image files from their computer and drop them straight onto a
+// person's card to add those photos, without opening the edit screen first.
+function attachPhotoDropZone(card, personId){
+  let dragCounter = 0;
+  function isFileDrag(e){
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+  }
+  card.addEventListener('dragover', (e) => {
+    if(!isFileDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+  card.addEventListener('dragenter', (e) => {
+    if(!isFileDrag(e)) return;
+    e.preventDefault();
+    dragCounter++;
+    card.classList.add('drag-over');
+  });
+  card.addEventListener('dragleave', (e) => {
+    if(!isFileDrag(e)) return;
+    dragCounter = Math.max(0, dragCounter - 1);
+    if(dragCounter === 0) card.classList.remove('drag-over');
+  });
+  card.addEventListener('drop', (e) => {
+    if(!isFileDrag(e)) return;
+    e.preventDefault();
+    dragCounter = 0;
+    card.classList.remove('drag-over');
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+    if(!files.length) return;
+    addPhotosToPerson(personId, files);
+  });
+}
+
+function addPhotosToPerson(personId, files, onDone){
+  const person = BY_ID[personId];
+  if(!person) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!person.photos) person.photos = [];
+      person.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0){
+        saveToLocalStorage();
+        render(applyCurrentFilter());
+        if(onDone) onDone();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// Lets someone drop photo files directly onto the open profile sheet to add them to
+// whoever's profile is currently showing -- goes into the draft while editing (applied
+// on Save, like the rest of the edit form), or straight onto the real record otherwise.
+function handleSheetPhotoDrop(files){
+  if(currentId == null) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(editing && draft){
+        if(!draft.photos) draft.photos = [];
+        draft.photos.push(reader.result);
+      } else {
+        const person = BY_ID[currentId];
+        if(!person) return;
+        if(!person.photos) person.photos = [];
+        person.photos.push(reader.result);
+      }
+      remaining--;
+      if(remaining === 0){
+        if(!editing) saveToLocalStorage();
+        refreshSheet();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+(function setupSheetDropZone(){
+  const sheetEl = document.querySelector('#overlay .sheet');
+  if(!sheetEl) return;
+  let dragCounter = 0;
+  // Only react to an actual file being dragged in -- dragging selected text (a normal
+  // browser behavior when you click-drag across an input field) fires these same events,
+  // and intercepting those was interfering with ordinary text selection.
+  function isFileDrag(e){
+    return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files');
+  }
+  sheetEl.addEventListener('dragover', (e) => { if(!isFileDrag(e)) return; e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  sheetEl.addEventListener('dragenter', (e) => {
+    if(!isFileDrag(e)) return;
+    e.preventDefault();
+    dragCounter++;
+    sheetEl.classList.add('sheet-drag-over');
+  });
+  sheetEl.addEventListener('dragleave', (e) => {
+    if(!isFileDrag(e)) return;
+    dragCounter = Math.max(0, dragCounter - 1);
+    if(dragCounter === 0) sheetEl.classList.remove('sheet-drag-over');
+  });
+  sheetEl.addEventListener('drop', (e) => {
+    if(!isFileDrag(e)) return;
+    e.preventDefault();
+    dragCounter = 0;
+    sheetEl.classList.remove('sheet-drag-over');
+    const files = Array.from(e.dataTransfer.files || []).filter(f => f.type.startsWith('image/'));
+    if(files.length) handleSheetPhotoDrop(files);
+  });
+})();
+
+// Extracts a sortable value from the leading date in a dates string, regardless of whether
+// it uses "/" or "-" as the day/month/year separator (both appear in this data).
+function parseBirthDate(dates){
+  if(!dates) return null;
+  const m = dates.match(/^\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return null;
+  let day = parseInt(m[1],10), month = parseInt(m[2],10), year = parseInt(m[3],10);
+  if(year < 100) year += (year < 30 ? 2000 : 1900);
+  if(isNaN(day)||isNaN(month)||isNaN(year)) return null;
+  return year*10000 + month*100 + day;
+}
+
+function chipsFor(container, ids, field, editing, mode, selfPerson){
+  container.innerHTML = '';
+  let list = ids ? ids.slice() : [];
+
+  if(field === 'siblings' || field === 'children'){
+    const items = list.filter(id => BY_ID[id]).map(id => ({ id, person: BY_ID[id], isSelf:false }));
+    // Only show the "you are here" placeholder among siblings, and only when there are
+    // other siblings to order against. Insert it at self's actual position in the shared
+    // parent's Children order (not always at the end) -- otherwise a manual reorder that
+    // moves "self" earlier wouldn't visually show up when viewed from their own profile.
+    if(field === 'siblings' && selfPerson && list.length > 0){
+      let selfIndex = items.length;
+      if(selfPerson.parents && selfPerson.parents.length){
+        const parent = BY_ID[selfPerson.parents[0]];
+        if(parent && parent.children){
+          const posInParent = parent.children.indexOf(selfPerson.id);
+          if(posInParent !== -1){
+            const idsBeforeSelf = new Set(parent.children.slice(0, posInParent));
+            selfIndex = items.filter(it => idsBeforeSelf.has(it.id)).length;
+          }
+        }
+      }
+      items.splice(selfIndex, 0, { id: selfPerson.id, person: selfPerson, isSelf:true });
+    }
+    items.sort((a,b) => {
+      const da = parseBirthDate(a.person.dates), db = parseBirthDate(b.person.dates);
+      if(da==null && db==null) return 0;
+      if(da==null) return 1;
+      if(db==null) return -1;
+      return da - db;
+    });
+    if(!items.length && !editing){
+      container.innerHTML = '<span class="no-data">Not shown in this tree</span>';
+    }
+    items.forEach(item => {
+      const person = item.person;
+      const chip = document.createElement('div');
+      chip.className = 'chip' + (item.isSelf ? ' chip-self' : '');
+      const avatarHtml = mainPhoto(person)
+        ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
+        : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
+      // siblings are derived from shared Parents, not individually removable here --
+      // "un-siblinging" someone means editing their Parents directly instead
+      const showRemove = editing && !item.isSelf && field !== 'siblings';
+      // Children and siblings can be manually reordered (drag handle) when editing --
+      // useful for families where birth dates aren't known but the sequence is
+      // remembered. The "you are here" self chip in Siblings can be dragged too, to
+      // place yourself correctly among your own siblings.
+      const showReorderHandle = editing && (field === 'children' || field === 'siblings');
+      const handleHtml = showReorderHandle ? '<span class="chip-drag-handle" title="Drag to reorder">&#9776;</span>' : '';
+      chip.innerHTML = handleHtml + avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+        (showRemove ? ' <span class="rm" data-remove="'+field+'" data-id="'+item.id+'">&#10005;</span>' : '');
+      if(showReorderHandle) chip.dataset.id = item.id;
+      if(item.isSelf){
+        // greyed out, unclickable -- just shows this person's place in birth order
+        // (still draggable via its handle, to reposition it in the sequence)
+      } else if(!editing){
+        chip.onclick = () => openSheet(item.id, true);
+      } else if(showRemove){
+        chip.querySelector('.rm').onclick = (e) => {
+          e.stopPropagation();
+          if(mode === 'new'){ removeNewPersonRelation(field, item.id); } else { removeRelation(field, item.id); }
+        };
+      } else {
+        chip.onclick = () => openSheet(item.id, true);
+      }
+      container.appendChild(chip);
+    });
+    if(editing && field === 'children' && items.length > 1){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'No birth dates recorded for some of these \u2014 drag the \u2630 handle to set the correct order.';
+      container.appendChild(hint);
+      setupChipReorder(container, field, mode);
+    }
+    if(editing && field === 'siblings'){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'To remove someone, edit their Parents instead. Drag the \u2630 handle to set the birth order when dates aren\u2019t known.';
+      container.appendChild(hint);
+      if(items.length > 1) setupChipReorder(container, field, mode);
+    }
+    if(editing){
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-chip-btn';
+      addBtn.textContent = '+ Add';
+      addBtn.onclick = () => {
+        const boxId = mode === 'new' ? 'addSearch-new-'+field : 'addSearch-'+field;
+        const box = document.getElementById(boxId);
+        box.classList.toggle('active');
+        if(box.classList.contains('active')) box.querySelector('input').focus();
+      };
+      container.appendChild(addBtn);
+    }
+    return;
+  }
+
+  if(ids && ids.length){
+    ids.forEach(id => {
+      const person = BY_ID[id];
+      if(!person) return;
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      const avatarHtml = mainPhoto(person)
+        ? `<img class="chip-avatar" src="${mainPhoto(person)}" alt="">`
+        : `<span class="chip-avatar chip-avatar-placeholder">${initials(person.name)}</span>`;
+      // When someone has more than one spouse (e.g. remarried), the order can be
+      // manually set the same way as Children -- useful when marriage dates aren't
+      // recorded but the sequence (1st marriage, 2nd marriage...) is remembered.
+      const showReorderHandle = editing && field === 'spouse' && ids.length > 1;
+      const handleHtml = showReorderHandle ? '<span class="chip-drag-handle" title="Drag to reorder">&#9776;</span>' : '';
+      if(showReorderHandle) chip.dataset.id = id;
+      chip.innerHTML = handleHtml + avatarHtml + '<span class="chip-name">' + nameBlockHtml(person.name,'chip-name-main','chip-name-nick','chip-name-maiden') + '</span>' +
+        (editing ? ' <span class="rm" data-remove="'+field+'" data-id="'+id+'">&#10005;</span>' : '');
+      if(!editing){
+        chip.onclick = () => openSheet(id, true);
+      } else {
+        chip.querySelector('.rm').onclick = (e) => {
+          e.stopPropagation();
+          if(mode === 'new'){ removeNewPersonRelation(field, id); } else { removeRelation(field, id); }
+        };
+      }
+      container.appendChild(chip);
+    });
+    if(editing && field === 'spouse' && ids.length > 1){
+      const hint = document.createElement('div');
+      hint.className = 'siblings-edit-hint';
+      hint.textContent = 'More than one spouse recorded \u2014 drag the \u2630 handle to put them in order (e.g. 1st marriage, 2nd marriage).';
+      container.appendChild(hint);
+      setupChipReorder(container, field, mode);
+    }
+  } else if(!editing){
+    container.innerHTML = '<span class="no-data">Not shown in this tree</span>';
+  }
+  if(editing){
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-chip-btn';
+    addBtn.textContent = '+ Add';
+    addBtn.onclick = () => {
+      const boxId = mode === 'new' ? 'addSearch-new-'+field : 'addSearch-'+field;
+      const box = document.getElementById(boxId);
+      box.classList.toggle('active');
+      if(box.classList.contains('active')) box.querySelector('input').focus();
+    };
+    container.appendChild(addBtn);
+  }
+}
+
+// Lets someone drag a Children chip to reorder the list -- useful when birth dates
+// aren't known but the actual sequence is remembered. Works via Pointer Events (not
+// HTML5 native drag-and-drop) specifically so it works reliably on phones, not just
+// with a mouse. Uses nearest-neighbor detection since chips wrap onto multiple rows.
+//
+// Spouse and Children write into the draft, same as any other edit (applied on Save).
+// Siblings are different -- they're not stored directly, they're derived from whichever
+// parent's Children list generated them -- so reordering there writes straight through
+// to that parent's real record immediately, the same way adding a sibling already does.
+function setupChipReorder(container, field, mode){
+  let dragEl = null, startX = 0, startY = 0, dragging = false;
+
+  container.querySelectorAll('.chip-drag-handle').forEach(handle => {
+    handle.style.touchAction = 'none';
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      dragEl = handle.closest('.chip');
+      if(!dragEl) return;
+      startX = e.clientX; startY = e.clientY;
+      dragging = false;
+      handle.setPointerCapture(e.pointerId);
+
+      const onMove = (e) => {
+        if(!dragging){
+          if(Math.hypot(e.clientX - startX, e.clientY - startY) < 6) return;
+          dragging = true;
+          dragEl.classList.add('chip-dragging');
+        }
+        // Find the chip whose center is closest to the pointer (excluding the one being dragged)
+        let closest = null, closestDist = Infinity;
+        container.querySelectorAll('.chip').forEach(chip => {
+          if(chip === dragEl) return;
+          const r = chip.getBoundingClientRect();
+          const cx = r.left + r.width/2, cy = r.top + r.height/2;
+          const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+          if(dist < closestDist){ closestDist = dist; closest = chip; }
+        });
+        if(closest){
+          const r = closest.getBoundingClientRect();
+          const insertAfter = e.clientX > r.left + r.width/2;
+          if(insertAfter){
+            closest.after(dragEl);
+          } else {
+            closest.before(dragEl);
+          }
+        }
+      };
+      const onUp = (e) => {
+        handle.releasePointerCapture(e.pointerId);
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        if(dragging){
+          dragEl.classList.remove('chip-dragging');
+          const newOrder = Array.from(container.querySelectorAll('.chip[data-id]')).map(c => Number(c.dataset.id));
+          if(field === 'siblings'){
+            applySiblingReorder(newOrder);
+          } else if(mode === 'new'){
+            newDraft[field] = newOrder;
+          } else {
+            draft[field] = newOrder;
+          }
+        }
+        dragEl = null; dragging = false;
+      };
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    });
+  });
+}
+
+// Keeps a co-parent's own Children list in the same order after one parent's list was
+// reordered -- otherwise the sibling order shown from the other parent's side would
+// still reflect the old, un-reordered list.
+function syncCoParentChildrenOrder(fromParentId, newChildOrder){
+  const coParentIds = new Set();
+  newChildOrder.forEach(childId => {
+    const child = BY_ID[childId];
+    if(child) (child.parents||[]).forEach(pid => { if(pid !== fromParentId) coParentIds.add(pid); });
+  });
+  coParentIds.forEach(coParentId => {
+    const coParent = BY_ID[coParentId];
+    if(coParent && coParent.children){
+      const coParentChildSet = new Set(coParent.children);
+      if(coParentChildSet.size === newChildOrder.length && newChildOrder.every(id => coParentChildSet.has(id))){
+        coParent.children = newChildOrder.slice();
+      }
+    }
+  });
+}
+
+// Siblings reordering writes through to the real, saved parent record immediately
+// (there's no "Siblings" field to hold a draft of -- it's derived), the same way
+// adding a sibling already applies straight away rather than waiting for Save.
+function applySiblingReorder(newOrderIncludingSelf){
+  const me = BY_ID[currentId];
+  if(!me || !me.parents || !me.parents.length) return;
+  const parentId = me.parents[0];
+  const parent = BY_ID[parentId];
+  if(!parent) return;
+  parent.children = newOrderIncludingSelf.slice();
+  syncCoParentChildrenOrder(parentId, newOrderIncludingSelf);
+  rebuildIndex();
+  saveToLocalStorage();
+  render(applyCurrentFilter());
+  refreshSheet();
+}
+
+let currentId = null;
+let editing = false;
+let draft = null; // working copy of current person + connections while editing
+let navHistory = []; // stack of person ids visited via chip taps, for the back button
+
+function refreshSheet(){
+  const p = editing ? draft : BY_ID[currentId];
+  document.getElementById('sheetName').innerHTML = nameBlockHtml(p.name,'name-main','name-nickname','name-maiden');
+  document.getElementById('nameEditInput').value = p.name;
+  document.getElementById('sheetDates').textContent = p.dates || '';
+  document.getElementById('datesEditInput').value = p.dates || '';
+  document.getElementById('backBtn').style.display = (navHistory.length && !editing) ? 'flex' : 'none';
+  renderPhotoGallery(document.getElementById('sheetAvatar'), p, editing, false);
+
+  chipsFor(document.getElementById('relParents'), p.parents, 'parents', editing);
+  chipsFor(document.getElementById('relSpouse'), p.spouse, 'spouse', editing);
+  chipsFor(document.getElementById('relSiblings'), p.siblings, 'siblings', editing, undefined, p);
+  chipsFor(document.getElementById('relChildren'), p.children, 'children', editing);
+
+  document.getElementById('sheetName').style.display = editing ? 'none' : 'block';
+  document.getElementById('nameEditInput').style.display = editing ? 'block' : 'none';
+  document.getElementById('sheetDates').style.display = editing ? 'none' : 'block';
+  document.getElementById('datesEditInput').style.display = editing ? 'block' : 'none';
+  document.getElementById('photoEditRow').style.display = editing ? 'block' : 'none';
+  document.getElementById('editToggle').classList.toggle('on', editing);
+  document.getElementById('editToggle').textContent = editing ? 'Editing...' : '\u270E Edit this person';
+  document.getElementById('saveBar').classList.toggle('active', editing);
+  document.getElementById('deletePersonBtn').style.display = editing ? 'block' : 'none';
+  document.querySelector('.review-nav').style.display = editing ? 'none' : 'flex';
+  updateReviewNavButtons();
+  document.querySelectorAll('.add-search').forEach(b => b.classList.remove('active'));
+  if(editing) persistActiveDraft();
+}
+
+// Continuously mirrors the in-progress edit to this phone's local storage, separately
+// from the "already saved" cache -- so even changes never confirmed with that person's
+// own "Save changes" button survive a reload and can be offered back.
+function persistActiveDraft(){
+  try{ localStorage.setItem('familyTreeActiveDraft', JSON.stringify({personId: currentId, draft, ts: Date.now()})); }catch(e){}
+}
+function clearActiveDraft(){
+  try{ localStorage.removeItem('familyTreeActiveDraft'); }catch(e){}
+}
+
+// Renders either a single big avatar (view mode) or a scrollable gallery with
+// set-default and delete controls (edit mode). `isNew` targets the newDraft object.
+function renderPhotoGallery(container, p, editing, isNew){
+  container.innerHTML = '';
+  const photos = p.photos || [];
+  if(!editing){
+    if(!photos.length){
+      container.innerHTML = `<div class="avatar-big placeholder">${initials(p.name)}</div>`;
+      return;
+    }
+    const galleryWrap = document.createElement('div');
+    galleryWrap.className = 'photo-gallery view-gallery';
+    photos.forEach((src, idx) => {
+      const item = document.createElement('div');
+      item.className = 'gallery-item view-only';
+      item.innerHTML = `<img src="${src}" alt="${p.name}">`;
+      item.onclick = () => openPhotoViewer(photos, idx);
+      galleryWrap.appendChild(item);
+    });
+    container.appendChild(galleryWrap);
+    return;
+  }
+  const galleryWrap = document.createElement('div');
+  galleryWrap.className = 'photo-gallery';
+  if(!photos.length){
+    const ph = document.createElement('div');
+    ph.className = 'avatar-big placeholder';
+    ph.textContent = initials(p.name);
+    galleryWrap.appendChild(ph);
+  }
+  photos.forEach((src, idx) => {
+    const item = document.createElement('div');
+    item.className = 'gallery-item' + (idx === 0 ? ' is-default' : '');
+    item.innerHTML = `<img src="${src}" alt="">
+      <span class="gallery-rm" title="Remove photo">&#10005;</span>
+      ${idx === 0 ? '<span class="gallery-star" title="Default photo">&#9733;</span>' : ''}`;
+    item.querySelector('img').onclick = () => {
+      if(isNew){ setDefaultNewPhoto(idx); } else { setDefaultDraftPhoto(idx); }
+    };
+    item.querySelector('.gallery-rm').onclick = (e) => {
+      e.stopPropagation();
+      if(isNew){ removeNewPhoto(idx); } else { removeDraftPhoto(idx); }
+    };
+    galleryWrap.appendChild(item);
+  });
+  container.appendChild(galleryWrap);
+}
+
+let viewerPhotos = [];
+let viewerIndex = 0;
+function openPhotoViewer(photos, idx){
+  viewerPhotos = photos;
+  viewerIndex = idx;
+  renderViewerPhoto();
+  document.getElementById('photoViewerOverlay').classList.add('active');
+}
+function renderViewerPhoto(){
+  document.getElementById('viewerImg').src = viewerPhotos[viewerIndex];
+  document.getElementById('viewerPrev').style.visibility = viewerPhotos.length > 1 ? 'visible' : 'hidden';
+  document.getElementById('viewerNext').style.visibility = viewerPhotos.length > 1 ? 'visible' : 'hidden';
+}
+function viewerPrev(){
+  viewerIndex = (viewerIndex - 1 + viewerPhotos.length) % viewerPhotos.length;
+  renderViewerPhoto();
+}
+function viewerNext(){
+  viewerIndex = (viewerIndex + 1) % viewerPhotos.length;
+  renderViewerPhoto();
+}
+document.getElementById('viewerBack').onclick = () => document.getElementById('photoViewerOverlay').classList.remove('active');
+document.getElementById('viewerPrev').onclick = viewerPrev;
+document.getElementById('viewerNext').onclick = viewerNext;
+
+function setDefaultDraftPhoto(idx){
+  const [chosen] = draft.photos.splice(idx,1);
+  draft.photos.unshift(chosen);
+  refreshSheet();
+}
+function removeDraftPhoto(idx){
+  draft.photos.splice(idx,1);
+  refreshSheet();
+}
+function setDefaultNewPhoto(idx){
+  const [chosen] = newDraft.photos.splice(idx,1);
+  newDraft.photos.unshift(chosen);
+  refreshNewSheet();
+}
+function removeNewPhoto(idx){
+  newDraft.photos.splice(idx,1);
+  refreshNewSheet();
+}
+
+function openSheet(id, fromChip){
+  if(fromChip && currentId !== null && currentId !== id){
+    navHistory.push(currentId);
+  } else if(!fromChip){
+    navHistory = []; // fresh open (from grid or tree) starts a new navigation chain
+  }
+  currentId = id;
+  editing = false;
+  draft = null;
+  refreshSheet();
+  document.getElementById('overlay').classList.add('active');
+  document.querySelector('.sheet-inner').scrollTop = 0;
+}
+function goBack(){
+  if(!navHistory.length) return;
+  currentId = navHistory.pop();
+  editing = false;
+  draft = null;
+  refreshSheet();
+  document.querySelector('.sheet-inner').scrollTop = 0;
+}
+document.getElementById('backBtn').onclick = goBack;
+document.getElementById('closeSheet').onclick = () => { document.getElementById('overlay').classList.remove('active'); navHistory = []; if(editing) clearActiveDraft(); };
+document.getElementById('overlay').onclick = (e) => { if(e.target.id === 'overlay'){ e.currentTarget.classList.remove('active'); navHistory = []; if(editing) clearActiveDraft(); } };
+
+// Lets someone work through the whole list in order, reviewing/fixing each person in turn
+// without needing to close and reopen from the grid every time.
+function updateReviewNavButtons(){
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  document.getElementById('prevPersonBtn').disabled = idx <= 0;
+  document.getElementById('nextPersonBtn').disabled = (idx === -1) || (idx >= list.length - 1);
+}
+document.getElementById('prevPersonBtn').onclick = () => {
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  if(idx > 0) openSheet(list[idx-1].id);
+};
+document.getElementById('nextPersonBtn').onclick = () => {
+  const list = applyCurrentFilter();
+  const idx = list.findIndex(p => p.id === currentId);
+  if(idx !== -1 && idx < list.length - 1) openSheet(list[idx+1].id);
+};
+document.getElementById('donePersonBtn').onclick = () => {
+  document.getElementById('overlay').classList.remove('active');
+  navHistory = [];
+  if(editing) clearActiveDraft();
+};
+
+document.getElementById('editToggle').onclick = () => {
+  if(!editing){
+    editing = true;
+    const p = BY_ID[currentId];
+    draft = JSON.parse(JSON.stringify(p));
+  }
+  refreshSheet();
+};
+document.getElementById('nameEditInput').addEventListener('input', (e) => { if(editing){ draft.name = e.target.value; persistActiveDraft(); } });
+document.getElementById('datesEditInput').addEventListener('input', (e) => { if(editing){ draft.dates = e.target.value; persistActiveDraft(); } });
+
+document.getElementById('cancelEdit').onclick = () => {
+  editing = false;
+  draft = null;
+  clearActiveDraft();
+  refreshSheet();
+};
+
+// --- Delete person ---
+document.getElementById('deletePersonBtn').onclick = () => {
+  const p = BY_ID[currentId];
+  document.getElementById('deleteConfirmText').textContent =
+    `Delete "${p.name}"? Anyone connected to them as a parent, spouse, sibling, or child will have that link removed too.`;
+  document.getElementById('deleteConfirmOverlay').classList.add('active');
+};
+document.getElementById('cancelDelete').onclick = () => {
+  document.getElementById('deleteConfirmOverlay').classList.remove('active');
+};
+document.getElementById('deleteConfirmOverlay').onclick = (e) => {
+  if(e.target.id === 'deleteConfirmOverlay') e.currentTarget.classList.remove('active');
+};
+document.getElementById('confirmDelete').onclick = () => {
+  const idToDelete = currentId;
+  // strip the deleted person out of everyone else's relationship lists
+  PEOPLE.forEach(p => {
+    ['spouse','parents','siblings','children'].forEach(f => {
+      p[f] = p[f].filter(x => x !== idToDelete);
+    });
+  });
+  PEOPLE = PEOPLE.filter(p => p.id !== idToDelete);
+  rebuildIndex();
+  saveToLocalStorage();
+
+  document.getElementById('deleteConfirmOverlay').classList.remove('active');
+  document.getElementById('overlay').classList.remove('active');
+  editing = false;
+  draft = null;
+  currentId = null;
+  render(applyCurrentFilter());
+};
+
+document.getElementById('photoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!draft.photos) draft.photos = [];
+      draft.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0) refreshSheet();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+
+// Quick "Add photos" button next to Edit -- works without entering edit mode at all.
+// Applies straight to the real record (like the drag-and-drop feature), or into the
+// draft if the person happens to already be mid-edit, so nothing gets overwritten.
+document.getElementById('quickPhotoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
+  if(!files.length || currentId == null){ e.target.value=''; return; }
+  if(editing && draft){
+    let remaining = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if(!draft.photos) draft.photos = [];
+        draft.photos.push(reader.result);
+        remaining--;
+        if(remaining === 0) refreshSheet();
+      };
+      reader.readAsDataURL(file);
+    });
+  } else {
+    addPhotosToPerson(currentId, files, refreshSheet);
+  }
+  e.target.value = '';
+});
+
+document.getElementById('saveEdit').onclick = () => {
+  const newName = document.getElementById('nameEditInput').value.trim();
+  if(newName) draft.name = newName;
+  draft.dates = document.getElementById('datesEditInput').value.trim();
+
+  // apply symmetric relationships: for spouse/parents/children, mirror the link on the other
+  // person. Siblings are excluded here entirely -- they're derived automatically from
+  // Parents (see recomputeSiblingsAndChildren), never edited or mirrored directly.
+  const orig = BY_ID[currentId];
+  function diffAdded(a,b){ return b.filter(x => !a.includes(x)); }
+  function diffRemoved(a,b){ return a.filter(x => !b.includes(x)); }
+
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents' };
+  ['spouse','parents','children'].forEach(field => {
+    const added = diffAdded(orig[field]||[], draft[field]||[]);
+    const removed = diffRemoved(orig[field]||[], draft[field]||[]);
+    const mirrorField = mirrorMap[field];
+    added.forEach(otherId => {
+      const other = BY_ID[otherId];
+      if(other && !other[mirrorField].includes(currentId)) other[mirrorField].push(currentId);
+    });
+    removed.forEach(otherId => {
+      const other = BY_ID[otherId];
+      if(other) other[mirrorField] = other[mirrorField].filter(x => x !== currentId);
+    });
+  });
+
+  // If this person's Children order was manually changed (drag-to-reorder), keep any
+  // co-parent's own Children list in the same order too -- otherwise the sibling order
+  // shown from that other parent's side would still reflect the old, un-reordered list.
+  if(draft.children && orig.children && draft.children.length === orig.children.length &&
+     draft.children.some((id, i) => id !== orig.children[i])){
+    syncCoParentChildrenOrder(currentId, draft.children);
+  }
+
+  Object.assign(orig, draft);
+  rebuildIndex();
+  editing = false;
+  draft = null;
+  clearActiveDraft();
+  saveToLocalStorage();
+  render(applyCurrentFilter());
+  refreshSheet();
+};
+
+function removeRelation(field, id){
+  draft[field] = draft[field].filter(x => x !== id);
+  refreshSheet();
+}
+
+function addRelation(field, id){
+  if(!draft[field].includes(id) && id !== currentId) draft[field].push(id);
+  document.getElementById('addSearch-'+field).classList.remove('active');
+  refreshSheet();
+}
+
+// Siblings aren't stored directly -- they're derived from shared Parents, so this
+// class of bug (siblings not mirroring to each other, or drifting from Parents)
+// can't happen anymore. "Adding a sibling" really means "give them the same parents."
+function addSiblingViaSharedParents(targetId){
+  const me = BY_ID[currentId];
+  const myParents = me.parents;
+  if(!myParents || !myParents.length){
+    alert("This person doesn't have parents recorded yet. Add and save their parents first, then siblings can be linked through them.");
+    return;
+  }
+  const target = BY_ID[targetId];
+  if(target.parents && target.parents.length){
+    const same = target.parents.length === myParents.length &&
+      target.parents.slice().sort().join(',') === myParents.slice().sort().join(',');
+    if(!same){
+      if(!confirm(target.name + " already has different parents recorded. Replace them with the same parents as this person, making them siblings?")) return;
+    }
+  }
+  target.parents = myParents.slice();
+  rebuildIndex();
+  saveToLocalStorage();
+  if(editing){
+    draft.siblings = BY_ID[currentId].siblings.slice();
+    draft.children = BY_ID[currentId].children.slice();
+  }
+  document.getElementById('addSearch-siblings').classList.remove('active');
+  render(applyCurrentFilter());
+  refreshSheet();
+}
+
+document.querySelectorAll('.add-search input').forEach(input => {
+  input.addEventListener('input', () => {
+    const field = input.dataset.field;
+    const mode = input.dataset.mode;
+    const q = input.value.trim();
+    const qLower = q.toLowerCase();
+    const resultsBox = document.querySelector('.add-results[data-field="'+field+'"][data-mode="'+(mode||'')+'"]') ||
+                        document.querySelector('.add-results[data-field="'+field+'"]:not([data-mode])');
+    resultsBox.innerHTML = '';
+    if(!q) return;
+    const excludeId = mode === 'new' ? -1 : currentId;
+    const matches = PEOPLE.filter(p => p.id !== excludeId && p.name.toLowerCase().includes(qLower)).slice(0,6);
+    matches.forEach(p => {
+      const item = document.createElement('div');
+      item.className = 'add-result-item';
+      item.textContent = p.name;
+      item.onclick = () => {
+        if(mode === 'new'){ addNewPersonRelation(field, p.id); }
+        else if(field === 'siblings'){ addSiblingViaSharedParents(p.id); }
+        else { addRelation(field, p.id); }
+        input.value=''; resultsBox.innerHTML='';
+      };
+      resultsBox.appendChild(item);
+    });
+    // Offer to create a brand-new person with this name, right here
+    const exactMatch = PEOPLE.some(p => p.name.toLowerCase() === qLower);
+    if(!exactMatch){
+      const createItem = document.createElement('div');
+      createItem.className = 'add-result-item create-new-item';
+      createItem.innerHTML = '&#10011; Create new person: <strong>"' + q + '"</strong>';
+      createItem.onclick = () => {
+        const newId = createStubPerson(q);
+        if(mode === 'new'){ addNewPersonRelation(field, newId); }
+        else if(field === 'siblings'){ addSiblingViaSharedParents(newId); }
+        else { addRelation(field, newId); }
+        input.value=''; resultsBox.innerHTML='';
+      };
+      resultsBox.appendChild(createItem);
+    }
+  });
+});
+
+// Create a minimal new person on the fly (used when adding a relative that doesn't exist yet)
+function createStubPerson(name){
+  const maxId = PEOPLE.reduce((m,p) => Math.max(m,p.id), 0);
+  const newId = maxId + 1;
+  const stub = { id: newId, name: name, dates: '', photos: [], spouse: [], parents: [], siblings: [], children: [] };
+  PEOPLE.push(stub);
+  rebuildIndex();
+  saveToLocalStorage();
+  return newId;
+}
+
+// --- Add new person ---
+let newDraft = null;
+function blankDraft(){ return { id: null, name: '', dates: '', photos: [], spouse: [], parents: [], siblings: [], children: [] }; }
+
+function refreshNewSheet(){
+  renderPhotoGallery(document.getElementById('newPhotoPreview'), newDraft, true, true);
+  chipsFor(document.getElementById('newRelParents'), newDraft.parents, 'parents', true, 'new');
+  chipsFor(document.getElementById('newRelSpouse'), newDraft.spouse, 'spouse', true, 'new');
+  chipsFor(document.getElementById('newRelSiblings'), newDraft.siblings, 'siblings', true, 'new', newDraft);
+  chipsFor(document.getElementById('newRelChildren'), newDraft.children, 'children', true, 'new');
+  document.querySelectorAll('#newOverlay .add-search').forEach(b => b.classList.remove('active'));
+  persistNewDraft();
+}
+function persistNewDraft(){
+  try{
+    const name = document.getElementById('newNameInput').value;
+    const dates = document.getElementById('newDatesInput').value;
+    localStorage.setItem('familyTreeNewDraft', JSON.stringify({newDraft: Object.assign({}, newDraft, {name, dates}), ts: Date.now()}));
+  }catch(e){}
+}
+function clearNewDraft(){
+  try{ localStorage.removeItem('familyTreeNewDraft'); }catch(e){}
+}
+
+document.getElementById('newPhotoFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if(!files.length) return;
+  let remaining = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if(!newDraft.photos) newDraft.photos = [];
+      newDraft.photos.push(reader.result);
+      remaining--;
+      if(remaining === 0) refreshNewSheet();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+});
+
+function addNewPersonRelation(field, id){
+  if(field === 'siblings'){
+    const target = BY_ID[id];
+    if(!target.parents || !target.parents.length){
+      alert(target.name + " doesn't have parents recorded yet, so I can't set up a sibling link through them. Add their parents first, or set this new person's own Parents field directly instead.");
+      return;
+    }
+    newDraft.parents = target.parents.slice();
+    document.getElementById('addSearch-new-siblings').classList.remove('active');
+    refreshNewSheet();
+    return;
+  }
+  if(!newDraft[field].includes(id)) newDraft[field].push(id);
+  document.getElementById('addSearch-new-'+field).classList.remove('active');
+  refreshNewSheet();
+}
+function removeNewPersonRelation(field, id){
+  newDraft[field] = newDraft[field].filter(x => x !== id);
+  refreshNewSheet();
+}
+
+document.getElementById('addPersonBtn').onclick = () => {
+  newDraft = blankDraft();
+  document.getElementById('newNameInput').value = '';
+  document.getElementById('newDatesInput').value = '';
+  clearNewDraft();
+  refreshNewSheet();
+  document.getElementById('newOverlay').classList.add('active');
+};
+document.getElementById('newNameInput').addEventListener('input', persistNewDraft);
+document.getElementById('newDatesInput').addEventListener('input', persistNewDraft);
+document.getElementById('closeNewSheet').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
+document.getElementById('cancelNewPerson').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
+document.getElementById('newOverlay').onclick = (e) => { if(e.target.id === 'newOverlay'){ e.currentTarget.classList.remove('active'); clearNewDraft(); } };
+
+document.getElementById('saveNewPerson').onclick = () => {
+  const name = document.getElementById('newNameInput').value.trim();
+  if(!name){ alert('Please enter a name.'); return; }
+  const dates = document.getElementById('newDatesInput').value.trim();
+  const maxId = PEOPLE.reduce((m,p) => Math.max(m,p.id), 0);
+  const newId = maxId + 1;
+  const newPerson = { id: newId, name, dates, photos: newDraft.photos || [],
+    spouse: [...newDraft.spouse], parents: [...newDraft.parents],
+    siblings: [], children: [...newDraft.children] };
+
+  // Siblings are excluded here too -- derived automatically from Parents once rebuildIndex() runs below.
+  const mirrorMap = { spouse:'spouse', parents:'children', children:'parents' };
+  ['spouse','parents','children'].forEach(field => {
+    newPerson[field].forEach(otherId => {
+      const other = BY_ID[otherId];
+      const mirrorField = mirrorMap[field];
+      if(other && !other[mirrorField].includes(newId)) other[mirrorField].push(newId);
+    });
+  });
+
+  PEOPLE.push(newPerson);
+  rebuildIndex();
+  saveToLocalStorage();
+  clearNewDraft();
+  document.getElementById('newOverlay').classList.remove('active');
+  render(applyCurrentFilter());
+};
+
+function saveToLocalStorage(){
+  try{ localStorage.setItem('familyTreeEdits_v2', JSON.stringify(PEOPLE)); }catch(e){}
+}
+
+function applyCurrentFilter(){
+  const q = document.getElementById('peopleSearchBox').value.trim().toLowerCase();
+  const list = sortedList();
+  return q ? list.filter(p => p.name.toLowerCase().includes(q)) : list;
+}
+
+// Chrome (and some other browsers) can inject a saved/autofilled value into this field
+// on its own, without the person actually typing -- we saw it happen with the repo name
+// "Family-Tree" appearing unprompted. A real keystroke always fires 'keydown' immediately
+// before the resulting 'input' event; autofill does not. So: only trust an 'input' event
+// if a real keydown happened right before it, and silently reject/clear anything else.
+let lastSearchKeydown = 0;
+document.getElementById('peopleSearchBox').addEventListener('keydown', () => { lastSearchKeydown = Date.now(); });
+document.getElementById('peopleSearchBox').addEventListener('input', (e) => {
+  const genuineTyping = (Date.now() - lastSearchKeydown) < 800;
+  if(!genuineTyping && e.target.value.trim() !== ''){
+    e.target.value = '';
+    render(applyCurrentFilter());
+    return;
+  }
+  render(applyCurrentFilter());
+});
+// Defensive: explicitly clear on load in case the browser tries to restore some old
+// remembered value into this field before the person has typed anything themselves.
+document.getElementById('peopleSearchBox').value = '';
+updateSortDirLabel();
+render(sortedList());
+
+document.querySelectorAll('.tab-c').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab-c').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    document.getElementById('people-view').classList.toggle('active', target==='people');
+    document.getElementById('surnames-view').classList.toggle('active', target==='surnames');
+    document.getElementById('tree-view').classList.toggle('active', target==='tree');
+    document.getElementById('sortControls').style.visibility = target==='people' ? 'visible' : 'hidden';
+    if(target === 'surnames') showSurnameList();
+  };
+});
+
+// --- By Surname tab ---
+function parseSurname(name){
+  const parsed = parseDisplayName(name);
+  const words = parsed.main.trim().split(/\s+/);
+  return words[words.length-1] || '';
+}
+const SURNAME_JUNK = new Set(['1','2','3','Vrou','Seun','']);
+function buildSurnameMap(){
+  const map = {};
+  PEOPLE.forEach(p => {
+    const sn = parseSurname(p.name);
+    if(SURNAME_JUNK.has(sn)) return;
+    if(!map[sn]) map[sn] = [];
+    map[sn].push(p.id);
+  });
+  return map;
+}
+function rootAncestorFor(surname, surnameMap){
+  const ids = surnameMap[surname];
+  const roots = ids.filter(id => !BY_ID[id].parents.length);
+  const pool = roots.length ? roots : ids;
+  pool.sort((a,b)=>birthKeyFull(a)-birthKeyFull(b));
+  return pool[0];
+}
+function birthKeyFull(id){
+  const p = BY_ID[id];
+  const m = (p && p.dates || '').match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return 999999999;
+  let y = parseInt(m[3]); if(y<100) y += y<30?2000:1900;
+  return y*10000+parseInt(m[2])*100+parseInt(m[1]);
+}
+
+function showSurnameList(){
+  document.getElementById('surnames-back-row').style.display = 'none';
+  const surnameMap = buildSurnameMap();
+  const surnames = Object.keys(surnameMap).sort((a,b)=>a.localeCompare(b));
+  const body = document.getElementById('surnames-body');
+  body.innerHTML = '';
+  const list = document.createElement('div');
+  list.className = 'sn-list';
+  surnames.forEach(sn => {
+    const item = document.createElement('div');
+    item.className = 'sn-item';
+    const n = surnameMap[sn].length;
+    item.innerHTML = `<span>${sn}</span><span class="sn-count">${n} ${n===1?'person':'people'}</span>`;
+    item.onclick = () => showDescendantChart(sn, surnameMap);
+    list.appendChild(item);
+  });
+  body.appendChild(list);
+}
+
+function showDescendantChart(surname, surnameMap){
+  surnameMap = surnameMap || buildSurnameMap();
+  const rootId = rootAncestorFor(surname, surnameMap);
+
+  const gen = {};
+  const visited = new Set();
+  const queue = [[rootId, 0]];
+  while(queue.length){
+    const [pid, depth] = queue.shift();
+    if(visited.has(pid)) continue;
+    visited.add(pid);
+    gen[pid] = depth;
+    const p = BY_ID[pid];
+    if(!p) continue;
+    (p.spouse||[]).forEach(sid => { if(!visited.has(sid)){ visited.add(sid); gen[sid] = depth; } });
+    (p.children||[]).forEach(cid => queue.push([cid, depth+1]));
+  }
+  const ids = Object.keys(gen).map(Number);
+  const inSet = new Set(ids);
+
+  document.getElementById('surnames-back-row').style.display = 'block';
+  const body = document.getElementById('surnames-body');
+  body.innerHTML = '';
+  const heading = document.createElement('div');
+  heading.className = 'tier-label';
+  heading.style.marginBottom = '10px';
+  heading.textContent = surname + ' family \u2014 tap anyone to open their profile';
+  body.appendChild(heading);
+
+  // build family units within this descendant set
+  const visitedU = new Set();
+  const units = [];
+  const unitOf = {};
+  ids.forEach(id => {
+    if(visitedU.has(id)) return;
+    const p = BY_ID[id];
+    const members = [id];
+    (p.spouse||[]).forEach(sid => { if(inSet.has(sid) && !visitedU.has(sid)) members.push(sid); });
+    members.forEach(m => visitedU.add(m));
+    const u = {members, gen: gen[id]};
+    units.push(u);
+    members.forEach(m => unitOf[m] = u);
+  });
+  function childUnitsOf(unit){
+    const kids = [];
+    const seen = new Set();
+    unit.members.forEach(m => (BY_ID[m].children||[]).forEach(c => {
+      if(inSet.has(c) && !seen.has(c)){ seen.add(c); kids.push(c); }
+    }));
+    kids.sort((a,b)=>birthKeyFull(a)-birthKeyFull(b));
+    const result = []; const seenU = new Set();
+    kids.forEach(k => { const u = unitOf[k]; if(u && !seenU.has(u)){ seenU.add(u); result.push(u); } });
+    return result;
+  }
+  const placed = []; const placedSet = new Set();
+  function place(unit){
+    if(placedSet.has(unit)) return;
+    placedSet.add(unit); placed.push(unit);
+    childUnitsOf(unit).forEach(place);
+  }
+  place(unitOf[rootId]);
+  units.forEach(u => { if(!placedSet.has(u)) place(u); });
+
+  const BOX_W = 92, BOX_H = 92, GAP_WITHIN = 3, GAP_BETWEEN = 12, GEN_H = 118;
+  const px = {};
+  let cursor = 16;
+  placed.forEach(unit => {
+    const n = unit.members.length;
+    const y = unit.gen * GEN_H + 10;
+    unit.members.forEach((m, j) => { px[m] = [cursor + j*(BOX_W+GAP_WITHIN), y]; });
+    cursor += n*BOX_W + (n-1)*GAP_WITHIN + GAP_BETWEEN;
+  });
+  const maxX = Math.max(...Object.values(px).map(p=>p[0])) + BOX_W + 16;
+  const maxY = Math.max(...Object.values(px).map(p=>p[1])) + BOX_H + 16;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'dc-wrap';
+  const inner = document.createElement('div');
+  inner.style.cssText = `position:relative; width:${maxX}px; height:${maxY}px;`;
+
+  let svgLines = '';
+  const drawnSpouse = new Set();
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    (p.spouse||[]).forEach(sid => {
+      const key = [id,sid].sort().join('-');
+      if(drawnSpouse.has(key) || !inSet.has(sid)) return;
+      drawnSpouse.add(key);
+      const [x1,y1] = px[id], [x2,y2] = px[sid];
+      if(Math.abs(y1-y2) < 2){
+        const xa = Math.min(x1,x2)+BOX_W, xb = Math.max(x1,x2);
+        // Only draw the connecting line when the couple ended up genuinely close together
+        // in the layout. When they're far apart (different branches of a spread-out
+        // family), a straight line between them would cross through unrelated boxes and
+        // wrongly look like it connects to whoever it passes near -- better to leave the
+        // relationship visible only by tapping into either person's profile in that case.
+        if((xb - xa) < BOX_W * 2.5){
+          const yy = y1+BOX_H/2;
+          svgLines += `<line x1="${xa}" y1="${yy}" x2="${xb}" y2="${yy}" stroke="#b3452f" stroke-width="2"/>`;
+        }
+      }
+    });
+  });
+  const drawnChild = new Set();
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    if(!p.parents.length) return;
+    const parentsInSet = p.parents.filter(x=>inSet.has(x));
+    if(!parentsInSet.length) return;
+    const key = parentsInSet.slice().sort().join('-') + '>' + id;
+    if(drawnChild.has(key)) return;
+    drawnChild.add(key);
+    const pxs = parentsInSet.map(x=>px[x][0]+BOX_W/2);
+    const pys = parentsInSet.map(x=>px[x][1]+BOX_H);
+    const pmx = pxs.reduce((a,b)=>a+b,0)/pxs.length;
+    const pmy = Math.max(...pys);
+    const [cx,cy] = px[id];
+    const cmx = cx+BOX_W/2;
+    const midY = pmy + (cy-pmy)/2;
+    svgLines += `<path d="M ${pmx} ${pmy} L ${pmx} ${midY} L ${cmx} ${midY} L ${cmx} ${cy}" fill="none" stroke="#c9b48a" stroke-width="1.5"/>`;
+  });
+
+  inner.innerHTML = `<svg width="${maxX}" height="${maxY}" style="position:absolute; top:0; left:0;">${svgLines}</svg>`;
+  ids.forEach(id => {
+    const p = BY_ID[id];
+    const [x,y] = px[id];
+    const div = document.createElement('div');
+    div.className = 'dc-node' + (id === rootId ? ' dc-root' : '');
+    div.style.cssText = `left:${x}px; top:${y}px; width:${BOX_W}px;`;
+    const av = mainPhoto(p)
+      ? `<img class="dc-avatar" src="${mainPhoto(p)}" alt="">`
+      : `<div class="dc-avatar dc-placeholder">${initials(p.name)}</div>`;
+    const yr = birthKeyFull(id) === 999999999 ? '' : String(Math.floor(birthKeyFull(id)/10000));
+    div.innerHTML = `${av}<div class="dc-pname">${esc(parseDisplayName(p.name).main)}</div><div class="dc-pdates">${yr}</div>`;
+    div.onclick = () => openSheet(id);
+    inner.appendChild(div);
+  });
+
+  wrap.appendChild(inner);
+  body.appendChild(wrap);
+}
+document.getElementById('surnamesBackBtn').onclick = showSurnameList;
+function esc(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// --- GitHub-connected publishing ---
+function getGhConfig(){
+  try{
+    const raw = localStorage.getItem('familyTreeGitHubConfig');
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function setGhConfig(cfg){ localStorage.setItem('familyTreeGitHubConfig', JSON.stringify(cfg)); }
+function clearGhConfig(){ localStorage.removeItem('familyTreeGitHubConfig'); }
+function ghHeaders(token){
+  return { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' };
+}
+function updateSaveBtnLabel(){
+  const cfg = getGhConfig();
+  document.getElementById('saveFileBtn').innerHTML = cfg ? '&#128190; Publish' : '&#128190; Save';
+}
+function showPublishProgress(text){
+  const el = document.getElementById('publishProgress');
+  el.textContent = text;
+  el.classList.add('active');
+}
+function hidePublishProgress(delay){
+  const el = document.getElementById('publishProgress');
+  setTimeout(() => el.classList.remove('active'), delay||0);
+}
+async function ghGetFileSha(cfg, path){
+  const resp = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, { headers: ghHeaders(cfg.token) });
+  if(resp.status === 404) return null;
+  if(!resp.ok) throw new Error('Could not check ' + path + ' (HTTP ' + resp.status + ')');
+  const data = await resp.json();
+  return data.sha;
+}
+async function ghPutFile(cfg, path, base64Content, message){
+  const sha = await ghGetFileSha(cfg, path);
+  const body = { message, content: base64Content };
+  if(sha) body.sha = sha;
+  const resp = await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`, {
+    method: 'PUT',
+    headers: Object.assign({'Content-Type':'application/json'}, ghHeaders(cfg.token)),
+    body: JSON.stringify(body)
+  });
+  if(!resp.ok){
+    const errBody = await resp.json().catch(()=>({}));
+    throw new Error(errBody.message || ('HTTP ' + resp.status));
+  }
+  return resp.json();
+}
+function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+// Builds a plain-language summary of what actually changed since the last known-good
+// snapshot, for use as the commit message -- so GitHub's own history becomes a genuinely
+// readable changelog ("Riaan Burger: dates updated") instead of a generic one-liner.
+function summarizeChanges(before, after){
+  const beforeById = {}; before.forEach(p => beforeById[p.id] = p);
+  const afterById = {}; after.forEach(p => afterById[p.id] = p);
+  const notes = [];
+
+  after.forEach(p => {
+    const prev = beforeById[p.id];
+    if(!prev){ notes.push(`Added ${p.name}`); return; }
+    const changed = [];
+    if(prev.name !== p.name) changed.push('name');
+    if((prev.dates||'') !== (p.dates||'')) changed.push('dates');
+    if((prev.photos||[]).length !== (p.photos||[]).length) changed.push('photos');
+    if(JSON.stringify(prev.parents) !== JSON.stringify(p.parents)) changed.push('parents');
+    if(JSON.stringify(prev.spouse) !== JSON.stringify(p.spouse)) changed.push('spouse');
+    if(JSON.stringify(prev.children) !== JSON.stringify(p.children)) changed.push('children');
+    if(changed.length) notes.push(`${p.name}: ${changed.join(', ')} updated`);
+  });
+  before.forEach(p => { if(!afterById[p.id]) notes.push(`Removed ${p.name}`); });
+
+  if(!notes.length) return 'Update family tree data';
+  const shown = notes.slice(0, 6).join('; ');
+  return notes.length > 6 ? `${shown} (+${notes.length-6} more)` : shown;
+}
+
+// Checks whether the live data.json has changed since this tab last knew about it --
+// e.g. from another device, another tab, or someone else entirely. Returns the current
+// sha either way; `stale` is only meaningful once we actually have a prior sha to compare.
+async function checkForStaleData(cfg){
+  const currentSha = await ghGetFileSha(cfg, 'data.json');
+  const stale = knownDataSha !== null && currentSha !== null && currentSha !== knownDataSha;
+  return { stale, currentSha };
+}
+
+async function publishToGitHub(){
+  const cfg = getGhConfig();
+  if(!cfg){
+    document.getElementById('settingsOverlay').classList.add('active');
+    return;
+  }
+  const btn = document.getElementById('saveFileBtn');
+  btn.disabled = true;
+  try{
+    showPublishProgress('Checking for other changes...');
+    const { stale, currentSha } = await checkForStaleData(cfg);
+    if(stale){
+      hidePublishProgress(0);
+      const proceed = confirm(
+        'The live family tree has changed since you opened this page -- probably from ' +
+        'another device or tab. Publishing now could overwrite that work.\n\n' +
+        'Tap Cancel to reload and see the latest version first (recommended), or OK to ' +
+        'publish your changes anyway.'
+      );
+      if(!proceed){
+        showPublishProgress('Not published. Reload the page to see the latest version.');
+        hidePublishProgress(6000);
+        btn.disabled = false;
+        return;
+      }
+    }
+
+    let newPhotoCount = 0;
+    PEOPLE.forEach(p => (p.photos||[]).forEach(src => { if(src.startsWith('data:')) newPhotoCount++; }));
+    let uploaded = 0;
+    for(const p of PEOPLE){
+      if(!p.photos) continue;
+      for(let i=0;i<p.photos.length;i++){
+        const src = p.photos[i];
+        if(!src.startsWith('data:')) continue;
+        uploaded++;
+        showPublishProgress(`Uploading photo ${uploaded} of ${newPhotoCount}...`);
+        const base64Content = src.slice(src.indexOf(',')+1);
+        const filename = `${p.id}_${Date.now()}_${i}.jpg`;
+        const path = `photos/${filename}`;
+        await ghPutFile(cfg, path, base64Content, `Add photo for ${p.name}`);
+        p.photos[i] = path;
+      }
+    }
+    showPublishProgress('Publishing changes...');
+    const commitMessage = summarizeChanges(originalPeopleSnapshot, PEOPLE);
+    const result = await ghPutFile(cfg, 'data.json', utf8ToBase64(JSON.stringify(PEOPLE)), commitMessage);
+    knownDataSha = result && result.content ? result.content.sha : null;
+    originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
+    saveToLocalStorage();
+    showPublishProgress('Published! Everyone can now see your changes.');
+    hidePublishProgress(3000);
+  }catch(err){
+    showPublishProgress('Publish failed: ' + err.message);
+    hidePublishProgress(6000);
+  }finally{
+    btn.disabled = false;
+  }
+}
+document.getElementById('saveFileBtn').onclick = publishToGitHub;
+
+// --- Settings modal ---
+document.getElementById('settingsBtn').onclick = () => {
+  const cfg = getGhConfig();
+  document.getElementById('ghOwner').value = cfg ? cfg.owner : '';
+  document.getElementById('ghRepo').value = cfg ? cfg.repo : '';
+  document.getElementById('ghToken').value = cfg ? cfg.token : '';
+  document.getElementById('settingsStatus').innerHTML = cfg
+    ? '<div class="settings-status ok"><span class="connection-dot connected"></span>Connected to ' + cfg.owner + '/' + cfg.repo + '</div>'
+    : '<div class="settings-status info">Not connected yet &mdash; fill in the fields below and tap Connect.</div>';
+  document.getElementById('settingsOverlay').classList.add('active');
+};
+document.getElementById('settingsClose').onclick = () => document.getElementById('settingsOverlay').classList.remove('active');
+document.getElementById('settingsOverlay').onclick = (e) => { if(e.target.id==='settingsOverlay') e.currentTarget.classList.remove('active'); };
+
+document.getElementById('ghTestConnect').onclick = async () => {
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  const token = document.getElementById('ghToken').value.trim();
+  const statusEl = document.getElementById('settingsStatus');
+  if(!owner || !repo || !token){
+    statusEl.innerHTML = '<div class="settings-status err">Please fill in all three fields.</div>';
+    return;
+  }
+  statusEl.innerHTML = '<div class="settings-status info">Checking connection...</div>';
+  try{
+    const resp = await fetch(`https://api.github.com/repos/${owner}/${repo}`, { headers: ghHeaders(token) });
+    if(resp.status === 401 || resp.status === 403){
+      statusEl.innerHTML = '<div class="settings-status err">That access token wasn\'t accepted. Double check you copied it correctly and it hasn\'t expired.</div>';
+      return;
+    }
+    if(resp.status === 404){
+      statusEl.innerHTML = '<div class="settings-status err">Could not find that repository. Check the username and repository name.</div>';
+      return;
+    }
+    if(!resp.ok){
+      statusEl.innerHTML = '<div class="settings-status err">Something went wrong (HTTP ' + resp.status + '). Please try again.</div>';
+      return;
+    }
+    setGhConfig({owner, repo, token});
+    statusEl.innerHTML = '<div class="settings-status ok"><span class="connection-dot connected"></span>Connected to ' + owner + '/' + repo + '</div>';
+    updateSaveBtnLabel();
+  }catch(err){
+    statusEl.innerHTML = '<div class="settings-status err">Could not reach GitHub. Check your internet connection.</div>';
+  }
+};
+document.getElementById('ghDisconnect').onclick = () => {
+  clearGhConfig();
+  document.getElementById('ghOwner').value = '';
+  document.getElementById('ghRepo').value = '';
+  document.getElementById('ghToken').value = '';
+  document.getElementById('settingsStatus').innerHTML = '<div class="settings-status info">Disconnected.</div>';
+  updateSaveBtnLabel();
+};
+updateSaveBtnLabel();
+
+// Now that every function above exists, act on the unpublished-changes checks from
+// right after the initial data load. An in-progress single-person edit takes priority
+// over the coarser "saved locally but never published" cache.
+if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
+  const personName = BY_ID[pendingActiveDraft.personId].name;
+  document.getElementById('recoveryDetail').textContent =
+    'An edit in progress for ' + personName + ' looks like it never got saved.';
+  document.getElementById('recoveryOverlay').classList.add('active');
+  document.getElementById('restoreRecovery').onclick = () => {
+    document.getElementById('recoveryOverlay').classList.remove('active');
+    currentId = pendingActiveDraft.personId;
+    editing = true;
+    draft = pendingActiveDraft.draft;
+    document.getElementById('overlay').classList.add('active');
+    refreshSheet();
+    showPublishProgress('Restored \u2014 review, then tap "Save changes" and Publish.');
+    hidePublishProgress(6000);
+  };
+  document.getElementById('discardRecovery').onclick = () => {
+    clearActiveDraft();
+    document.getElementById('recoveryOverlay').classList.remove('active');
+  };
+} else if(pendingNewDraft){
+  const nm = (pendingNewDraft.newDraft.name||'').trim();
+  document.getElementById('recoveryDetail').textContent =
+    'A new person you were adding' + (nm ? (' ("' + nm + '")') : '') + ' looks like it never got saved.';
+  document.getElementById('recoveryOverlay').classList.add('active');
+  document.getElementById('restoreRecovery').onclick = () => {
+    document.getElementById('recoveryOverlay').classList.remove('active');
+    newDraft = pendingNewDraft.newDraft;
+    document.getElementById('newNameInput').value = newDraft.name || '';
+    document.getElementById('newDatesInput').value = newDraft.dates || '';
+    refreshNewSheet();
+    document.getElementById('newOverlay').classList.add('active');
+    showPublishProgress('Restored \u2014 review, then tap "Add this person" and Publish.');
+    hidePublishProgress(6000);
+  };
+  document.getElementById('discardRecovery').onclick = () => {
+    clearNewDraft();
+    document.getElementById('recoveryOverlay').classList.remove('active');
+  };
+} else if(pendingRecovery){
+  const oldById = {}; pendingRecovery.forEach(p => oldById[p.id] = p);
+  const newById = {}; PEOPLE.forEach(p => newById[p.id] = p);
+  const allIds = new Set([...pendingRecovery.map(p=>p.id), ...PEOPLE.map(p=>p.id)]);
+
+  function summarizePersonDiff(oldP, newP){
+    const changes = [];
+    if(oldP.name !== newP.name) changes.push('name');
+    if((oldP.dates||'') !== (newP.dates||'')) changes.push('dates');
+    if((oldP.photos||[]).length !== (newP.photos||[]).length) changes.push(`photos (${(newP.photos||[]).length} \u2192 ${(oldP.photos||[]).length})`);
+    if(JSON.stringify(oldP.parents) !== JSON.stringify(newP.parents)) changes.push('parents');
+    if(JSON.stringify(oldP.spouse) !== JSON.stringify(newP.spouse)) changes.push('spouse');
+    if(JSON.stringify(oldP.children) !== JSON.stringify(newP.children)) changes.push('children');
+    return changes.length ? changes.join(', ') + ' changed' : 'minor difference';
+  }
+
+  // Only two kinds of difference are actually worth reviewing here: something this
+  // browser has that isn't live yet ("added"), or something that exists in both but
+  // looks different ("modified"). A person who's live but wasn't in this old local
+  // snapshot just means someone else added them since -- already correctly published,
+  // nothing to recover, so it's left out of the list entirely.
+  const diffItems = [];
+  allIds.forEach(id => {
+    const oldP = oldById[id], newP = newById[id];
+    if(JSON.stringify(oldP) === JSON.stringify(newP)) return;
+    if(!newP){
+      diffItems.push({ id, type: 'added', name: oldP.name, summary: 'Not currently published', oldP, decision: null });
+    } else if(oldP){
+      diffItems.push({ id, type: 'modified', name: oldP.name, summary: summarizePersonDiff(oldP, newP), oldP, decision: null });
+    }
+  });
+
+  if(!diffItems.length){
+    // Everything different was just newer stuff already live -- nothing this browser
+    // has is actually worth restoring.
+    try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
+  } else {
+    document.getElementById('recoveryDetail').textContent =
+      diffItems.length + (diffItems.length === 1 ? ' person looks' : ' people look') +
+      ' different from what\'s currently published:';
+    const listEl = document.getElementById('recoveryChecklist');
+    listEl.innerHTML = diffItems.map(item => `
+      <div class="recovery-item">
+        <span>
+          <span class="recovery-item-name">${esc(item.name)}</span><span class="recovery-item-badge ${item.type}">${item.type === 'added' ? 'new' : 'changed'}</span>
+          <div class="recovery-item-summary">${esc(item.summary)}</div>
+        </span>
+      </div>
+    `).join('');
+    document.getElementById('reviewRecoveryBtn').style.display = 'block';
+    document.getElementById('restoreRecovery').textContent = 'Save as is';
+    document.getElementById('recoveryOverlay').classList.add('active');
+
+    // "Save as is" -- bring every differing person's local version back in one go,
+    // no per-person review. Still just fills in the workspace; Publish (top right)
+    // is a separate, later step, same as it's always been.
+    document.getElementById('restoreRecovery').onclick = () => {
+      diffItems.forEach(item => {
+        const existingIdx = PEOPLE.findIndex(p => p.id === item.id);
+        if(existingIdx === -1){ PEOPLE.push(JSON.parse(JSON.stringify(item.oldP))); } else { PEOPLE[existingIdx] = JSON.parse(JSON.stringify(item.oldP)); }
+      });
+      rebuildIndex();
+      render(applyCurrentFilter());
+      saveToLocalStorage();
+      document.getElementById('recoveryOverlay').classList.remove('active');
+      showPublishProgress(`Restored ${diffItems.length} \u2014 tap Save (top right) to publish these changes.`);
+      hidePublishProgress(6000);
+    };
+    document.getElementById('discardRecovery').onclick = () => {
+      try{ localStorage.removeItem('familyTreeEdits_v2'); }catch(e){}
+      document.getElementById('recoveryOverlay').classList.remove('active');
+    };
+
+    // --- Review, one person at a time, with a side-by-side before/after ---
+    let reviewItems = diffItems;
+    let reviewIndex = 0;
+    let reviewEditContext = null; // {index} while the full person editor is open mid-review
+
+    function nameForId(id){
+      const p = BY_ID[id] || oldById[id];
+      return p ? p.name : 'Unknown person';
+    }
+    function idsToNames(ids){
+      if(!ids || !ids.length) return '\u2014';
+      return ids.map(nameForId).join(', ');
+    }
+    function reviewFieldRows(oldP, newP){
+      // oldP = this browser's local version (what "Use this version" applies).
+      // newP = currently published version, or null if not published at all yet.
+      const rows = [];
+      if(!newP || oldP.name !== newP.name){
+        rows.push({ label: 'Name', before: newP ? newP.name : '\u2014 not published yet', after: oldP.name });
+      }
+      const beforeDates = newP ? (newP.dates || '\u2014') : '\u2014';
+      const afterDates = oldP.dates || '\u2014';
+      // For a not-yet-published person, only worth a row if this browser actually has
+      // something to show -- an empty "\u2014 vs \u2014" row tells you nothing new.
+      if(newP ? beforeDates !== afterDates : !!oldP.dates){
+        rows.push({ label: 'Dates', before: beforeDates, after: afterDates });
+      }
+      const beforePhotoCount = newP ? (newP.photos||[]).length : 0;
+      const afterPhotoCount = (oldP.photos||[]).length;
+      if(newP ? beforePhotoCount !== afterPhotoCount : afterPhotoCount > 0){
+        rows.push({
+          label: 'Photos',
+          before: beforePhotoCount + (beforePhotoCount===1?' photo':' photos'),
+          after: afterPhotoCount + (afterPhotoCount===1?' photo':' photos')
+        });
+      }
+      ['parents','spouse','children'].forEach(field => {
+        const beforeIds = newP ? (newP[field]||[]) : [];
+        const afterIds = oldP[field]||[];
+        const showRow = newP ? (JSON.stringify(beforeIds) !== JSON.stringify(afterIds)) : afterIds.length > 0;
+        if(showRow){
+          rows.push({
+            label: field.charAt(0).toUpperCase()+field.slice(1),
+            before: newP ? idsToNames(beforeIds) : '\u2014',
+            after: idsToNames(afterIds)
+          });
+        }
+      });
+      return rows;
+    }
+    function renderReviewCard(){
+      const item = reviewItems[reviewIndex];
+      document.getElementById('reviewCounter').textContent = `Person ${reviewIndex+1} of ${reviewItems.length}`;
+      const decidedBadge = item.decision
+        ? `<span class="recovery-item-badge decided">${item.decision === 'keep' ? 'kept published' : (item.decision === 'edited' ? 'edited & saved' : 'using this version')}</span>`
+        : '';
+      document.getElementById('reviewCardName').innerHTML =
+        `<span class="recovery-item-name" style="font-size:1.15em;">${esc(item.name)}</span>` +
+        `<span class="recovery-item-badge ${item.type}">${item.type === 'added' ? 'new' : 'changed'}</span>${decidedBadge}`;
+      const noteEl = document.getElementById('reviewCardNote');
+      if(item.type === 'added'){
+        noteEl.textContent = 'This person only exists in this browser \u2014 not on the published site yet.';
+        noteEl.style.display = 'block';
+      } else {
+        noteEl.style.display = 'none';
+      }
+      const newP = item.type === 'added' ? null : BY_ID[item.id];
+      const rows = reviewFieldRows(item.oldP, newP);
+      document.getElementById('reviewCardBody').innerHTML = rows.map(r => `
+        <div class="review-field-row">
+          <div class="review-field-label">${esc(r.label)}</div>
+          <div class="review-field-cols">
+            <div class="review-field-col review-before"><div class="review-col-tag">Published</div><div>${esc(String(r.before))}</div></div>
+            <div class="review-field-col review-after"><div class="review-col-tag">This browser</div><div>${esc(String(r.after))}</div></div>
+          </div>
+        </div>
+      `).join('');
+
+      document.getElementById('reviewKeepPublished').textContent = item.type === 'added' ? "Don't add them" : 'Keep published';
+      document.getElementById('reviewUseVersion').textContent = item.type === 'added' ? 'Add them' : 'Use this version';
+      document.getElementById('reviewEditPerson').style.display = item.type === 'modified' ? 'block' : 'none';
+      document.getElementById('reviewPrevBtn').disabled = reviewIndex === 0;
+      document.getElementById('reviewNextBtn').textContent = (reviewIndex === reviewItems.length - 1) ? 'Finish' : 'Next \u2192';
+    }
+    function goToNextCardOrFinish(){
+      if(reviewIndex < reviewItems.length - 1){ reviewIndex++; renderReviewCard(); }
+      else finishReview();
+    }
+    function finishReview(){
+      document.getElementById('recoveryReviewOverlay').classList.remove('active');
+      rebuildIndex();
+      render(applyCurrentFilter());
+      saveToLocalStorage();
+      const used = reviewItems.filter(it => it.decision === 'use' || it.decision === 'edited').length;
+      if(used){
+        showPublishProgress(`Applied ${used} of ${reviewItems.length} \u2014 tap Save (top right) to publish these changes.`);
+        hidePublishProgress(6000);
+      }
+    }
+    document.getElementById('reviewRecoveryBtn').onclick = () => {
+      reviewIndex = 0;
+      document.getElementById('recoveryOverlay').classList.remove('active');
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      renderReviewCard();
+    };
+    document.getElementById('reviewKeepPublished').onclick = () => {
+      reviewItems[reviewIndex].decision = 'keep';
+      goToNextCardOrFinish();
+    };
+    document.getElementById('reviewUseVersion').onclick = () => {
+      const item = reviewItems[reviewIndex];
+      item.decision = 'use';
+      const existingIdx = PEOPLE.findIndex(p => p.id === item.id);
+      if(existingIdx === -1){ PEOPLE.push(JSON.parse(JSON.stringify(item.oldP))); } else { PEOPLE[existingIdx] = JSON.parse(JSON.stringify(item.oldP)); }
+      rebuildIndex();
+      render(applyCurrentFilter());
+      goToNextCardOrFinish();
+    };
+    document.getElementById('reviewEditPerson').onclick = () => {
+      const item = reviewItems[reviewIndex];
+      if(item.type !== 'modified') return;
+      reviewEditContext = { index: reviewIndex };
+      document.getElementById('recoveryReviewOverlay').classList.remove('active');
+      currentId = item.id;
+      editing = true;
+      draft = JSON.parse(JSON.stringify(item.oldP));
+      document.getElementById('overlay').classList.add('active');
+      refreshSheet();
+      showPublishProgress('Editing this browser\'s version \u2014 make any changes, then tap "Save changes".');
+      hidePublishProgress(6000);
+    };
+    document.getElementById('reviewPrevBtn').onclick = () => { if(reviewIndex > 0){ reviewIndex--; renderReviewCard(); } };
+    document.getElementById('reviewNextBtn').onclick = goToNextCardOrFinish;
+    document.getElementById('reviewClose').onclick = finishReview;
+    document.getElementById('recoveryReviewOverlay').addEventListener('click', (e) => { if(e.target.id==='recoveryReviewOverlay') finishReview(); });
+
+    // Resume the review stepper after "Edit" sends the person through the normal,
+    // full-featured editor. saveEdit's own handler (defined earlier) already applies
+    // the edit to PEOPLE and saves it -- these just pick the review flow back up.
+    document.getElementById('saveEdit').addEventListener('click', () => {
+      if(!reviewEditContext) return;
+      const idx = reviewEditContext.index;
+      reviewEditContext = null;
+      if(reviewItems[idx]) reviewItems[idx].decision = 'edited';
+      document.getElementById('overlay').classList.remove('active');
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      reviewIndex = idx;
+      goToNextCardOrFinish();
+    });
+    function resumeReviewWithoutDeciding(){
+      if(!reviewEditContext) return;
+      const idx = reviewEditContext.index;
+      reviewEditContext = null;
+      document.getElementById('recoveryReviewOverlay').classList.add('active');
+      reviewIndex = idx;
+      renderReviewCard();
+    }
+    document.getElementById('closeSheet').addEventListener('click', resumeReviewWithoutDeciding);
+    document.getElementById('overlay').addEventListener('click', (e) => { if(e.target.id==='overlay') resumeReviewWithoutDeciding(); });
+    document.getElementById('donePersonBtn').addEventListener('click', resumeReviewWithoutDeciding);
+  }
+}
+
+// --- Android/browser back-button handling ---
+// Without this, the phone's physical back button (or an edge-swipe gesture) closes the
+// whole app immediately, even mid-edit. Instead: the first back-press closes whichever
+// modal is open (same as tapping its own close/cancel button); only when nothing is
+// open does back-press actually offer to exit, and even then it asks first.
+const MODAL_CONFIG = [
+  { id: 'photoViewerOverlay', closeBtnId: 'viewerBack' },
+  { id: 'deleteConfirmOverlay', closeBtnId: 'cancelDelete' },
+  { id: 'recoveryOverlay', closeBtnId: 'discardRecovery' },
+  { id: 'recoveryReviewOverlay', closeBtnId: 'reviewClose' },
+  { id: 'settingsOverlay', closeBtnId: 'settingsClose' },
+  { id: 'newOverlay', closeBtnId: 'closeNewSheet' },
+  { id: 'overlay', closeBtnId: 'closeSheet' },
+];
+history.pushState({appBase: true}, '', location.href);
+window.addEventListener('popstate', () => {
+  // Special case: if the profile sheet is open and there's chip-navigation history to
+  // retrace (and we're not mid-edit), step back one person at a time first, matching
+  // what the in-app back arrow already does -- only close the whole sheet once that
+  // history is exhausted.
+  const sheetOpen = document.getElementById('overlay').classList.contains('active');
+  if(sheetOpen && !editing && navHistory.length > 0){
+    goBack();
+    history.pushState({appBase: true}, '', location.href);
+    return;
+  }
+  for(const cfg of MODAL_CONFIG){
+    const el = document.getElementById(cfg.id);
+    if(el && el.classList.contains('active')){
+      document.getElementById(cfg.closeBtnId).click();
+      history.pushState({appBase: true}, '', location.href);
+      return;
+    }
+  }
+  // Nothing was open -- this back-press means "leave the app". Confirm first.
+  const wantsToExit = confirm('Exit the family tree app?');
+  if(wantsToExit){
+    history.back();
+  } else {
+    history.pushState({appBase: true}, '', location.href);
+  }
+});
+
+// --- Pinch-to-zoom the People grid (fewer/more columns) ---
+// Useful for casting to a TV or large screen: pinching in shrinks the cards so more fit
+// per row, pinching out grows them back. Persists across visits on this device.
+(function setupGridPinchZoom(){
+  const grid = document.getElementById('grid');
+  if(!grid) return;
+  const MIN_PX = 72, MAX_PX = 220;
+  let startDist = null;
+  let startSize = null;
+
+  function currentSize(){
+    const stored = localStorage.getItem('familyTreeCardMinWidth');
+    if(stored) return parseInt(stored, 10);
+    const cssVal = getComputedStyle(document.documentElement).getPropertyValue('--card-min-width').trim();
+    return cssVal ? parseInt(cssVal, 10) : 140;
+  }
+  function applySize(px){
+    px = Math.max(MIN_PX, Math.min(MAX_PX, px));
+    document.documentElement.style.setProperty('--card-min-width', px + 'px');
+    try{ localStorage.setItem('familyTreeCardMinWidth', String(px)); }catch(e){}
+  }
+  function dist(touches){
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  }
+
+  // restore any previously chosen size on load
+  const saved = localStorage.getItem('familyTreeCardMinWidth');
+  if(saved) document.documentElement.style.setProperty('--card-min-width', saved + 'px');
+
+  grid.addEventListener('touchstart', (e) => {
+    if(e.touches.length === 2){
+      startDist = dist(e.touches);
+      startSize = currentSize();
+    }
+  }, {passive: true});
+
+  grid.addEventListener('touchmove', (e) => {
+    if(e.touches.length === 2 && startDist){
+      e.preventDefault();
+      const newDist = dist(e.touches);
+      const scale = newDist / startDist;
+      applySize(Math.round(startSize * scale));
+    }
+  }, {passive: false});
+
+  grid.addEventListener('touchend', (e) => {
+    if(e.touches.length < 2){ startDist = null; startSize = null; }
+  }, {passive: true});
+})();
+</script>
+
+</body>
+</html>
