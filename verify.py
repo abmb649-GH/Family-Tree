@@ -360,6 +360,35 @@ def run(path):
         check("Dominique and Rikus Botha are siblings of each other",
               rikus_b in by_id[dominique_vb].get('siblings', []) and dominique_vb in by_id[rikus_b].get('siblings', []))
 
+    # Whitney Anne Kilian(Smith) married into the family via (Day) Phillip Rudolph Kilian --
+    # she was found incorrectly linked as a child of Judith Claire Rothbone(Olivier), an
+    # unrelated branch (Judith is Rothbone/Olivier; Whitney's maiden name is Smith, and her
+    # husband's blood family is the Kilians). Her real parents aren't in the tree. Fixed
+    # 2026-09-10.
+    whitney = get_one('Whitney')
+    judith_rb = get_one('Judith Claire Rothbone')
+    if whitney:
+        check("Whitney Anne Kilian(Smith) has no parents recorded (she married in, maiden name Smith)",
+              by_id[whitney].get('parents', []) == [])
+    if judith_rb and whitney:
+        check("Whitney Anne Kilian is NOT listed as Judith Claire Rothbone's child (wrong link, removed)",
+              whitney not in by_id[judith_rb].get('children', []))
+
+    # Melissa Caine and Dwayne Caine were found linked as each other's SPOUSE, which would
+    # make them a couple instead of siblings. Per the user: they are actually the two
+    # children of Judith Claire Rothbone(Olivier) (143) from her current marriage to a Caine
+    # man who isn't recorded in the tree yet (no name/details available). Fixed 2026-09-10.
+    melissa_c = get_one('Melissa Caine')
+    dwayne_c = get_one('Dwayne Caine')
+    if judith_rb and melissa_c and dwayne_c:
+        check("Melissa Caine and Dwayne Caine both show Judith Claire Rothbone as their parent",
+              by_id[melissa_c].get('parents', []) == [judith_rb] and by_id[dwayne_c].get('parents', []) == [judith_rb])
+        check("Melissa Caine and Dwayne Caine are siblings of each other, NOT spouses",
+              dwayne_c in by_id[melissa_c].get('siblings', []) and by_id[melissa_c].get('spouse', []) == [] and
+              melissa_c in by_id[dwayne_c].get('siblings', []) and by_id[dwayne_c].get('spouse', []) == [])
+        check("Judith Claire Rothbone shows both Melissa and Dwayne as her children",
+              set(by_id[judith_rb].get('children', [])) == {melissa_c, dwayne_c})
+
     # ---------- REPORT ----------
     print(f"Checked {len(data)} people.\n")
     if failures:
