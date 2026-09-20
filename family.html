@@ -93,6 +93,16 @@
   main{padding:14px;}
   #people-count{ text-align:center; color:#8a7a56; margin-bottom:10px; font-size:.9em; }
   .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
+  .birthday-banner{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:linear-gradient(135deg, #fff3d6, #ffe9c2); border:1px solid #e9cd8a;
+    border-radius:14px; padding:12px 14px; margin-bottom:12px;
+  }
+  .birthday-banner-close{ background:none; border:none; color:#8a7228; font-size:1.1em; cursor:pointer; flex-shrink:0; padding:2px 6px; }
+  #birthdayBannerText{ font-weight:700; color:#6b5518; font-size:.95em; }
+  #birthdayBannerText .bday-name{ text-decoration:underline; cursor:pointer; }
+  .birthday-ics-link{ text-align:center; margin:-4px 0 12px; }
+  .birthday-ics-link .textbtn2{ font-size:.8em; }
   .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--card-min-width, 140px),1fr)); gap:12px; touch-action:pan-y; }
   .card{
     background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
@@ -432,6 +442,13 @@
 
 <main>
   <div id="people-view" class="active">
+    <div id="birthdayBanner" class="birthday-banner" style="display:none;">
+      <div id="birthdayBannerText"></div>
+      <button class="birthday-banner-close" id="birthdayBannerClose" title="Dismiss for today">&#10005;</button>
+    </div>
+    <div class="birthday-ics-link">
+      <button class="textbtn2" id="downloadBirthdaysBtn">&#128197; Get birthday reminders in your phone's calendar</button>
+    </div>
     <div id="people-count"></div>
     <div class="grid" id="grid"></div>
   </div>
@@ -712,6 +729,13 @@ try{
 }
 rebuildIndex();
 
+// Checked now (right after loading), acted on later once openSheet() etc. exist.
+const today = new Date();
+const todaysBirthdayPeople = PEOPLE.filter(p => {
+  const md = parseBirthMonthDay(p.dates);
+  return md && md.day === today.getDate() && md.month === (today.getMonth()+1) && !isDeceased(p.dates);
+});
+
 function initials(name){
   return name.replace(/\(.*?\)/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
 }
@@ -922,6 +946,26 @@ function parseBirthDate(dates){
   if(year < 100) year += (year < 30 ? 2000 : 1900);
   if(isNaN(day)||isNaN(month)||isNaN(year)) return null;
   return year*10000 + month*100 + day;
+}
+
+// Just the day+month, for birthday matching -- unlike parseBirthDate this also works
+// for people whose birth year isn't known (e.g. "14/02 - Present"), since a birthday
+// is still worth celebrating even without knowing someone's exact age.
+function parseBirthMonthDay(dates){
+  if(!dates) return null;
+  const m = dates.match(/^\s*"?(\d{1,2})[\/\-](\d{1,2})/);
+  if(!m) return null;
+  const day = parseInt(m[1],10), month = parseInt(m[2],10);
+  if(isNaN(day) || isNaN(month) || day < 1 || day > 31 || month < 1 || month > 12) return null;
+  return {day, month};
+}
+
+// True if someone has a recorded death date (an end-date that isn't "Present" or blank).
+function isDeceased(dates){
+  if(!dates) return false;
+  const parts = dates.split('-');
+  const end = (parts[parts.length-1] || '').trim();
+  return end !== '' && end !== 'Present' && /\d/.test(end);
 }
 
 function chipsFor(container, ids, field, editing, mode, selfPerson){
@@ -1977,6 +2021,65 @@ window.addEventListener('popstate', () => {
     if(e.touches.length < 2){ startDist = null; startSize = null; }
   }, {passive: true});
 })();
+
+// --- Birthday banner ---
+(function setupBirthdayBanner(){
+  if(!todaysBirthdayPeople.length) return;
+  const todayKey = today.toISOString().slice(0,10);
+  const dismissKey = 'birthdayBannerDismissed_' + todayKey;
+  if(localStorage.getItem(dismissKey)) return;
+
+  const names = todaysBirthdayPeople.map(p => parseDisplayName(p.name).main);
+  const label = todaysBirthdayPeople.length === 1 ? 'birthday' : 'birthdays';
+  const textEl = document.getElementById('birthdayBannerText');
+  textEl.innerHTML = `\u{1F382} Today's ${label}: ` + todaysBirthdayPeople
+    .map(p => `<span class="bday-name" data-id="${p.id}">${esc(parseDisplayName(p.name).main)}</span>`)
+    .join(', ');
+  textEl.querySelectorAll('.bday-name').forEach(el => {
+    el.onclick = () => openSheet(Number(el.dataset.id), false);
+  });
+  document.getElementById('birthdayBanner').style.display = 'flex';
+  document.getElementById('birthdayBannerClose').onclick = () => {
+    document.getElementById('birthdayBanner').style.display = 'none';
+    try{ localStorage.setItem(dismissKey, '1'); }catch(e){}
+  };
+})();
+
+// --- Downloadable birthday calendar (.ics) -- for import into the phone's own Calendar
+// app, so reminders keep working even without opening this site. Living and deceased
+// people are both included here (unlike the banner above) since a private calendar
+// reminder to remember a loved one is a different, more personal context than a
+// cheerful pop-up banner shown to everyone who opens the site.
+function generateBirthdayICS(){
+  const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Our Family Tree//Birthdays//EN','CALSCALE:GREGORIAN'];
+  PEOPLE.forEach(p => {
+    const md = parseBirthMonthDay(p.dates);
+    if(!md) return;
+    const dateStr = '2000' + String(md.month).padStart(2,'0') + String(md.day).padStart(2,'0');
+    const mainName = parseDisplayName(p.name).main;
+    lines.push('BEGIN:VEVENT');
+    lines.push('UID:birthday-' + p.id + '@ourfamilytree');
+    lines.push('DTSTART;VALUE=DATE:' + dateStr);
+    lines.push('RRULE:FREQ=YEARLY');
+    lines.push('SUMMARY:\u{1F382} ' + mainName + '’s Birthday');
+    lines.push('DESCRIPTION:Birthday reminder from Our Family Tree');
+    lines.push('END:VEVENT');
+  });
+  lines.push('END:VCALENDAR');
+  return lines.join('\r\n');
+}
+document.getElementById('downloadBirthdaysBtn').onclick = () => {
+  const ics = generateBirthdayICS();
+  const blob = new Blob([ics], {type: 'text/calendar'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'family-birthdays.ics';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+};
 </script>
 
 </body>
