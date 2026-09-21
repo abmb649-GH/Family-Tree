@@ -95,22 +95,53 @@
   .drop-hint{ text-align:center; color:#a3946f; font-size:.78em; margin:-6px 0 12px; }
   .birthday-banner{
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    background:linear-gradient(135deg, #fff3d6, #ffe9c2); border:1px solid #e9cd8a;
-    border-radius:14px; padding:12px 14px; margin-bottom:12px;
+    background:linear-gradient(135deg, #ffb703, #ff5d8f 55%, #b967ff);
+    border:2px solid rgba(255,255,255,.7);
+    border-radius:16px; padding:13px 16px; margin-bottom:14px;
+    box-shadow:0 6px 18px rgba(185,103,255,.32), 0 2px 6px rgba(255,93,143,.25);
+    animation: birthdayPop .45s cubic-bezier(.34,1.56,.64,1);
   }
-  .birthday-banner-close{ background:none; border:none; color:#8a7228; font-size:1.1em; cursor:pointer; flex-shrink:0; padding:2px 6px; }
-  #birthdayBannerText{ font-weight:700; color:#6b5518; font-size:.95em; }
-  #birthdayBannerText .bday-name{ text-decoration:underline; cursor:pointer; }
-  .birthday-ics-link{ text-align:center; margin:-4px 0 12px; }
-  .birthday-ics-link .textbtn2{ font-size:.8em; }
+  @keyframes birthdayPop{ 0%{ transform:scale(.92); opacity:0; } 100%{ transform:scale(1); opacity:1; } }
+  .birthday-banner-close{ background:rgba(255,255,255,.28); border:none; color:#fff; font-size:1.05em; cursor:pointer; flex-shrink:0; padding:4px 10px; border-radius:8px; }
+  .birthday-banner-close:hover{ background:rgba(255,255,255,.42); }
+  .birthday-banner-icon{ font-size:2.3em; line-height:1; flex-shrink:0; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
+  #birthdayBannerText{ flex:1; text-align:center; font-weight:800; color:#fff; font-size:.98em; text-shadow:0 1px 3px rgba(0,0,0,.18); }
+  #birthdayBannerText .bday-name{ text-decoration:underline; text-decoration-color:rgba(255,255,255,.65); cursor:pointer; }
+  .birthday-header-btn{
+    flex-shrink:0; background:linear-gradient(135deg, #ffb703, #ff5d8f); color:#fff; border:1px solid #ff5d8f;
+    border-radius:9px; padding:7px 10px; font-size:.82em; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .reminders-list label:hover{ background:#fbf6ea; border-radius:8px; }
+  .reminders-subscribe-note b{ color:var(--accent-dark); }
+  .reminders-subscribe-btn{
+    flex:1; padding:10px 12px; border-radius:12px; border:none; font-weight:700; font-size:.88em;
+    cursor:pointer; text-align:center; text-decoration:none; display:inline-block; box-sizing:border-box;
+    background:var(--accent-dark); color:#fff;
+  }
+  .reminders-subscribe-btn-secondary{
+    flex:1; padding:10px 12px; border-radius:12px; font-weight:700; font-size:.88em; cursor:pointer;
+    background:var(--bg); color:var(--accent-dark); border:1px solid var(--line);
+  }
   .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(var(--card-min-width, 140px),1fr)); gap:12px; touch-action:pan-y; }
   .card{
+    position:relative;
     background:var(--card-bg); border:1px solid var(--line); border-radius:16px;
     padding:12px 8px 14px; text-align:center; cursor:pointer;
     transition:transform .1s ease, box-shadow .15s ease, border-color .15s ease;
     box-shadow:0 1px 3px rgba(0,0,0,.06);
   }
   .card:active{transform:scale(.96);}
+  .coffin-icon{
+    display:inline-block; vertical-align:middle; background-repeat:no-repeat;
+    background-position:center; background-size:contain;
+    background-image:url('data:image/png;base64,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');
+  }
+  .card-deceased-badge{
+    position:absolute; right:6px; bottom:6px; font-size:1.05em; line-height:1;
+    background:#fff; border:1px solid var(--line); border-radius:50%;
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 3px rgba(0,0,0,.15); pointer-events:none;
+  }
   .card.drag-over{
     border-color:var(--accent); border-width:2px; background:#fff8ea;
     box-shadow:0 0 0 4px #e9d9a8;
@@ -212,12 +243,21 @@
     text-align:center; border:2px solid var(--accent); border-radius:10px;
     padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
   }
+  #datesEditRow{ display:none; align-items:center; gap:8px; margin-bottom:8px; }
   #datesEditInput{
-    width:100%; font-size:1.05em; color:var(--accent-dark);
+    flex:1; font-size:1.05em; color:var(--accent-dark);
     text-align:center; border:2px solid var(--accent); border-radius:10px;
-    padding:6px 10px; margin-bottom:8px; display:none; font-family:inherit;
+    padding:6px 10px; font-family:inherit;
   }
   .dates-big{ font-size:1.15em; color:#7a6a48; margin-bottom:6px; }
+  .deceased-toggle{
+    display:flex; align-items:center; gap:4px; flex-shrink:0; cursor:pointer;
+    font-size:1.3em; padding:0 8px; height:38px; box-sizing:border-box;
+    border:2px solid var(--accent); border-radius:10px; background:#fff;
+  }
+  .deceased-toggle input[type="checkbox"]{ width:18px; height:18px; cursor:pointer; }
+  .deceased-toggle.disabled{ opacity:.55; cursor:not-allowed; }
+  .deceased-toggle.disabled input[type="checkbox"]{ cursor:not-allowed; }
 
   .edit-toggle{
     margin:10px auto 0; display:inline-flex; align-items:center; gap:6px;
@@ -316,6 +356,11 @@
   }
   .save-bar .save-btn{ background:var(--accent-dark); color:#fff; }
   .save-bar .cancel-btn{ background:var(--bg); color:var(--accent-dark); border:1px solid var(--line); }
+  /* The reminders overlay has a lot of scrollable content (a long checkbox list plus the
+     subscribe section) that can already fill the whole sheet, so a sticky-to-viewport save-bar
+     would float on top of that content instead of sitting below it. Keep this one bar as a
+     normal block at the true end of the sheet instead of pinning it to the viewport. */
+  #remindersSaveBar{ position:static; margin:20px -20px calc(-20px - env(safe-area-inset-bottom, 0px)); }
 
   .photo-upload-btn{
     display:inline-block; background:var(--bg); border:1px solid var(--line);
@@ -371,9 +416,14 @@
   .viewer-prev{ left:14px; }
   .viewer-next{ right:14px; }
 
-  #newNameInput, #newDatesInput{
+  #newNameInput{
     width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
     font-size:1em; margin-bottom:10px; font-family:inherit; text-align:center;
+  }
+  #newDatesRow{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  #newDatesInput{
+    flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    font-size:1em; font-family:inherit; text-align:center;
   }
   #newNameInput{ font-weight:700; font-size:1.2em; color:var(--accent-dark); }
   .new-person-label{
@@ -423,6 +473,7 @@
   <div class="header-top-row">
     <h1>Our Family Tree</h1>
     <div class="header-btn-group">
+      <button class="birthday-header-btn" id="downloadBirthdaysBtn" title="Download everyone's birthdays as a calendar file">&#127881; Reminders</button>
       <button class="add-person-btn-top" id="addPersonBtn">+ Add new</button>
       <button class="settings-header-btn" id="settingsBtn" title="Connection settings">Setup</button>
       <button class="save-header-btn" id="saveFileBtn" title="Publish your changes">&#128190; Save</button>
@@ -450,11 +501,10 @@
 <main>
   <div id="people-view" class="active">
     <div id="birthdayBanner" class="birthday-banner" style="display:none;">
+      <span class="birthday-banner-icon" aria-hidden="true">&#127874;</span>
       <div id="birthdayBannerText"></div>
+      <span class="birthday-banner-icon" aria-hidden="true">&#127881;</span>
       <button class="birthday-banner-close" id="birthdayBannerClose" title="Dismiss for today">&#10005;</button>
-    </div>
-    <div class="birthday-ics-link">
-      <button class="textbtn2" id="downloadBirthdaysBtn">&#128197; Get birthday reminders in your phone's calendar</button>
     </div>
     <div id="people-count"></div>
     <div class="drop-hint">Tip: drag and drop a photo onto anyone's card to add it to their profile</div>
@@ -491,7 +541,13 @@
     </div>
     <input id="nameEditInput" type="text">
     <h2 id="sheetName"></h2>
-    <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+    <div id="datesEditRow">
+      <input id="datesEditInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+      <label class="deceased-toggle" id="deceasedToggleLabel" title="Deceased">
+        <input type="checkbox" id="deceasedCheckbox">
+        <span class="coffin-icon" aria-hidden="true" style="width:26px; height:21.5px;"></span>
+      </label>
+    </div>
     <div class="dates-big" id="sheetDates"></div>
 
     <div style="text-align:center; display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
@@ -557,6 +613,20 @@
     <div class="save-bar active">
       <button class="cancel-btn" id="cancelDelete">Cancel</button>
       <button class="save-btn" id="confirmDelete" style="background:#b3452f;">Delete</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="deceasedInfoOverlay">
+  <div class="sheet" style="max-width:380px;">
+   <div class="sheet-inner" style="text-align:center;">
+    <div class="sheet-topbar"><button class="close" id="deceasedInfoClose">&#10005;</button></div>
+    <span class="coffin-icon" style="width:48px; height:39.8px; display:inline-block; margin:0 auto 10px;"></span>
+    <h2 id="deceasedInfoName" style="margin:0 0 16px;"></h2>
+    <div style="text-align:left; display:inline-block; color:var(--ink); line-height:2;">
+      <div><strong>Born:</strong> <span id="deceasedInfoBorn"></span></div>
+      <div><strong>Passed away:</strong> <span id="deceasedInfoPassed"></span></div>
     </div>
    </div>
   </div>
@@ -660,7 +730,13 @@
     <div class="new-person-label">Name</div>
     <input id="newNameInput" type="text" placeholder="Full name">
     <div class="new-person-label">Dates (optional)</div>
-    <input id="newDatesInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+    <div id="newDatesRow">
+      <input id="newDatesInput" type="text" placeholder="e.g. 12/05/1990 - Present">
+      <label class="deceased-toggle" id="newDeceasedToggleLabel" title="Deceased">
+        <input type="checkbox" id="newDeceasedCheckbox">
+        <span class="coffin-icon" aria-hidden="true" style="width:26px; height:21.5px;"></span>
+      </label>
+    </div>
 
     <div class="rel-section">
       <div class="rel-title"><span>Parents</span></div>
@@ -699,6 +775,45 @@
     <div class="save-bar active">
       <button class="cancel-btn" id="cancelNewPerson">Cancel</button>
       <button class="save-btn" id="saveNewPerson">Add person</button>
+    </div>
+   </div>
+  </div>
+</div>
+
+<div class="overlay" id="remindersOverlay">
+  <div class="sheet" style="max-width:480px;">
+   <div class="sheet-inner">
+    <div class="sheet-topbar"><button class="close" id="remindersClose">&#10005;</button></div>
+    <h2 style="margin-top:0;">&#127881; Birthday reminders</h2>
+    <p style="color:#8a7a56; font-size:.88em; text-align:left; line-height:1.5;">
+      Search and pick who you want reminders for, then download a calendar file. Anyone new you
+      add to the tree later is included automatically unless you uncheck them here again.
+      Family members marked <span class="coffin-icon" aria-hidden="true" style="width:16px; height:13.3px; vertical-align:-3px;"></span> deceased are included in the list but left unticked by
+      default &mdash; tick one if you'd like a yearly reminder to remember them by.
+    </p>
+    <input id="remindersSearchBox" type="text" placeholder="Search a name..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="width:100%; box-sizing:border-box; margin-bottom:8px;">
+    <div style="display:flex; gap:14px; margin-bottom:8px; font-size:.82em;">
+      <button class="textbtn2" id="remindersSelectAll">Select all</button>
+      <button class="textbtn2" id="remindersSelectNone">Select none</button>
+    </div>
+    <div id="remindersList" class="reminders-list" style="max-height:260px; overflow-y:auto; border:1px solid var(--line); border-radius:12px; padding:6px 10px; text-align:left;"></div>
+
+    <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line); text-align:left;">
+      <div style="font-weight:700; color:var(--accent-dark); margin-bottom:4px; font-size:.92em;">Or subscribe for automatic updates</div>
+      <p class="reminders-subscribe-note" style="color:#8a7a56; font-size:.82em; line-height:1.5; margin:0 0 10px;">
+        This always includes everyone living (no picking individuals, and no deceased family
+        members) but updates itself forever &mdash; works well in <b>Google Calendar</b> and
+        <b>Apple Calendar</b>. <b>Outlook's</b> subscribe feature is unreliable, so for Outlook
+        we recommend Download below instead.
+      </p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a id="remindersSubscribeLink" class="reminders-subscribe-btn" href="#">&#128257; Subscribe</a>
+        <button class="reminders-subscribe-btn-secondary" id="remindersCopyLink">&#128203; Copy link</button>
+      </div>
+    </div>
+
+    <div class="save-bar active" id="remindersSaveBar">
+      <button class="save-btn" id="remindersDownloadBtn" style="width:100%;">&#128197; Download calendar file (<span id="remindersSelectedCount">0</span> selected)</button>
     </div>
    </div>
   </div>
@@ -798,7 +913,7 @@ rebuildIndex();
 const today = new Date();
 const todaysBirthdayPeople = PEOPLE.filter(p => {
   const md = parseBirthMonthDay(p.dates);
-  return md && md.day === today.getDate() && md.month === (today.getMonth()+1) && !isDeceased(p.dates);
+  return md && md.day === today.getDate() && md.month === (today.getMonth()+1) && !isDeceased(p);
 });
 
 // A snapshot of PEOPLE exactly as loaded/last published -- used both to write a
@@ -932,7 +1047,14 @@ function render(list){
     let avatarHtml = mainPhoto(p)
       ? `<img class="avatar" src="${mainPhoto(p)}" alt="${p.name}">`
       : `<div class="avatar placeholder">${initials(p.name)}</div>`;
-    card.innerHTML = `${avatarHtml}<div class="name">${nameBlockHtml(p.name,'name-main','name-nickname','name-maiden')}</div><div class="dates">${p.dates || ''}</div>`;
+    const deceasedBadge = isDeceased(p) ? `<span class="card-deceased-badge" title="Deceased">${COFFIN_ICON_HTML}</span>` : '';
+    card.innerHTML = `${avatarHtml}<div class="name">${nameBlockHtml(p.name,'name-main','name-nickname','name-maiden')}</div><div class="dates">${p.dates || ''}</div>${deceasedBadge}`;
+    if(deceasedBadge){
+      // Tapping the coffin badge shows a quick birth/passing date popup instead of opening
+      // the full profile sheet -- stopPropagation keeps the card's own onclick from firing too.
+      const badgeEl = card.querySelector('.card-deceased-badge');
+      if(badgeEl) badgeEl.addEventListener('click', (e) => { e.stopPropagation(); openDeceasedInfo(p.id); });
+    }
     attachPhotoDropZone(card, p.id);
     grid.appendChild(card);
   });
@@ -1076,12 +1198,75 @@ function parseBirthMonthDay(dates){
   return {day, month};
 }
 
-// True if someone has a recorded death date (an end-date that isn't "Present" or blank).
-function isDeceased(dates){
+// A small coffin icon, used everywhere a "deceased" indicator is shown (tile badge, the
+// checkbox in the date row, reminders picker tag/intro text). Rendered as a CSS background-image
+// from the user's own reference illustration (embedded below as base64) rather than a text/emoji
+// glyph or a hand-drawn SVG shape, both of which rendered illegibly at small sizes.
+const COFFIN_ICON_HTML = '<span class="coffin-icon" style="width:18px; height:15px;"></span>';
+
+// True if the free-text dates field already records an end date that isn't "Present" or blank
+// (e.g. "12/05/1940 - 03/09/2020").
+function hasEndDate(dates){
   if(!dates) return false;
   const parts = dates.split('-');
   const end = (parts[parts.length-1] || '').trim();
   return end !== '' && end !== 'Present' && /\d/.test(end);
+}
+// True if this person is deceased -- either their dates field already has an end date, or
+// they've been explicitly flagged deceased (the coffin checkbox) even with no known date yet.
+function isDeceased(p){
+  if(!p) return false;
+  return hasEndDate(p.dates) || !!p.deceased;
+}
+
+// --- Deceased info popup: tapping the coffin badge on a card shows a small modal with the
+// person's birth and passing dates, without opening the full edit sheet. ---
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+// Splits a dates field into its birth/end raw substrings the same way hasEndDate does (split
+// on every '-', the last chunk is the end marker) so this always agrees with the rest of the
+// app about which part is which, even for the handful of records that use '-' inside the date
+// itself (e.g. "06-04-2022 - Present").
+function splitDatesField(dates){
+  if(!dates) return { birthRaw:'', endRaw:'' };
+  const parts = dates.split('-');
+  const endRaw = (parts[parts.length-1] || '').trim();
+  const birthRaw = parts.slice(0, -1).join('-').trim();
+  return { birthRaw, endRaw };
+}
+// Parses a single date fragment like "24/09/1908" (or "24-09-1908") into day/month/year --
+// deliberately lenient (no anchors) to match the handful of loosely-formatted dates already
+// present in the data, same spirit as parseBirthDate above.
+function parseDateParts(raw){
+  if(!raw) return null;
+  const m = raw.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(!m) return null;
+  let day = parseInt(m[1],10), month = parseInt(m[2],10), year = parseInt(m[3],10);
+  if(year < 100) year += (year < 30 ? 2000 : 1900);
+  if(isNaN(day) || isNaN(month) || isNaN(year)) return null;
+  if(month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return {day, month, year};
+}
+function formatDisplayDate(raw){
+  const parts = parseDateParts(raw);
+  if(!parts) return null;
+  return `${parts.day} ${MONTH_NAMES[parts.month-1]} ${parts.year}`;
+}
+function openDeceasedInfo(personId){
+  const p = BY_ID[personId];
+  if(!p) return;
+  const { birthRaw, endRaw } = splitDatesField(p.dates);
+  const bornText = formatDisplayDate(birthRaw) || 'Not recorded';
+  let passedText;
+  if(hasEndDate(p.dates)){
+    passedText = formatDisplayDate(endRaw) || 'Recorded, but not in a readable date format';
+  } else {
+    passedText = 'Date not recorded';
+  }
+  document.getElementById('deceasedInfoName').textContent = parseDisplayName(p.name).main;
+  document.getElementById('deceasedInfoBorn').textContent = bornText;
+  document.getElementById('deceasedInfoPassed').textContent = passedText;
+  document.getElementById('deceasedInfoOverlay').classList.add('active');
 }
 
 function chipsFor(container, ids, field, editing, mode, selfPerson){
@@ -1350,6 +1535,17 @@ function refreshSheet(){
   document.getElementById('nameEditInput').value = p.name;
   document.getElementById('sheetDates').textContent = p.dates || '';
   document.getElementById('datesEditInput').value = p.dates || '';
+  {
+    const derivedDeceased = hasEndDate(p.dates);
+    const cb = document.getElementById('deceasedCheckbox');
+    cb.checked = derivedDeceased || !!p.deceased;
+    cb.disabled = derivedDeceased;
+    const label = document.getElementById('deceasedToggleLabel');
+    label.classList.toggle('disabled', derivedDeceased);
+    label.title = derivedDeceased
+      ? 'Automatically marked deceased from the passing date above'
+      : 'Mark as deceased';
+  }
   document.getElementById('backBtn').style.display = (navHistory.length && !editing) ? 'flex' : 'none';
   renderPhotoGallery(document.getElementById('sheetAvatar'), p, editing, false);
 
@@ -1361,7 +1557,7 @@ function refreshSheet(){
   document.getElementById('sheetName').style.display = editing ? 'none' : 'block';
   document.getElementById('nameEditInput').style.display = editing ? 'block' : 'none';
   document.getElementById('sheetDates').style.display = editing ? 'none' : 'block';
-  document.getElementById('datesEditInput').style.display = editing ? 'block' : 'none';
+  document.getElementById('datesEditRow').style.display = editing ? 'flex' : 'none';
   document.getElementById('photoEditRow').style.display = editing ? 'block' : 'none';
   document.getElementById('editToggle').classList.toggle('on', editing);
   document.getElementById('editToggle').textContent = editing ? 'Editing...' : '\u270E Edit this person';
@@ -1534,6 +1730,32 @@ document.getElementById('editToggle').onclick = () => {
 };
 document.getElementById('nameEditInput').addEventListener('input', (e) => { if(editing){ draft.name = e.target.value; persistActiveDraft(); } });
 document.getElementById('datesEditInput').addEventListener('input', (e) => { if(editing){ draft.dates = e.target.value; persistActiveDraft(); } });
+document.getElementById('deceasedCheckbox').addEventListener('change', (e) => {
+  if(!editing) return;
+  const cb = e.target;
+  if(cb.checked){
+    if(hasEndDate(draft.dates)){
+      draft.deceased = true; // already derived from a real passing date -- just reflect it
+    } else {
+      const mainName = parseDisplayName(draft.name || 'this person').main;
+      const knowsDate = confirm(`Do you know the date ${mainName} passed away?\n\nClick OK to enter it now, or Cancel if it isn't known yet.`);
+      if(knowsDate){
+        const entered = (prompt('Enter the date of passing (e.g. 05/03/2020):', '') || '').trim();
+        if(entered){
+          if(draft.dates && draft.dates.includes('-')) draft.dates = draft.dates.replace(/-[^-]*$/, '- ' + entered);
+          else if(draft.dates) draft.dates = draft.dates.trim() + ' - ' + entered;
+          else draft.dates = '- ' + entered;
+          document.getElementById('datesEditInput').value = draft.dates;
+        }
+      }
+      draft.deceased = true; // flagged deceased either way -- with or without a known date
+    }
+  } else {
+    draft.deceased = false;
+  }
+  persistActiveDraft();
+  refreshSheet();
+});
 
 document.getElementById('cancelEdit').onclick = () => {
   editing = false;
@@ -1554,6 +1776,10 @@ document.getElementById('cancelDelete').onclick = () => {
 };
 document.getElementById('deleteConfirmOverlay').onclick = (e) => {
   if(e.target.id === 'deleteConfirmOverlay') e.currentTarget.classList.remove('active');
+};
+document.getElementById('deceasedInfoClose').onclick = () => document.getElementById('deceasedInfoOverlay').classList.remove('active');
+document.getElementById('deceasedInfoOverlay').onclick = (e) => {
+  if(e.target.id === 'deceasedInfoOverlay') e.currentTarget.classList.remove('active');
 };
 document.getElementById('confirmDelete').onclick = () => {
   const idToDelete = currentId;
@@ -1757,7 +1983,7 @@ function createStubPerson(name){
 
 // --- Add new person ---
 let newDraft = null;
-function blankDraft(){ return { id: null, name: '', dates: '', photos: [], spouse: [], parents: [], siblings: [], children: [] }; }
+function blankDraft(){ return { id: null, name: '', dates: '', deceased: false, photos: [], spouse: [], parents: [], siblings: [], children: [] }; }
 
 function refreshNewSheet(){
   renderPhotoGallery(document.getElementById('newPhotoPreview'), newDraft, true, true);
@@ -1766,6 +1992,17 @@ function refreshNewSheet(){
   chipsFor(document.getElementById('newRelSiblings'), newDraft.siblings, 'siblings', true, 'new', newDraft);
   chipsFor(document.getElementById('newRelChildren'), newDraft.children, 'children', true, 'new');
   document.querySelectorAll('#newOverlay .add-search').forEach(b => b.classList.remove('active'));
+  {
+    const derivedDeceased = hasEndDate(document.getElementById('newDatesInput').value);
+    const cb = document.getElementById('newDeceasedCheckbox');
+    cb.checked = derivedDeceased || !!newDraft.deceased;
+    cb.disabled = derivedDeceased;
+    const label = document.getElementById('newDeceasedToggleLabel');
+    label.classList.toggle('disabled', derivedDeceased);
+    label.title = derivedDeceased
+      ? 'Automatically marked deceased from the passing date above'
+      : 'Mark as deceased';
+  }
   persistNewDraft();
 }
 function persistNewDraft(){
@@ -1827,6 +2064,30 @@ document.getElementById('addPersonBtn').onclick = () => {
 };
 document.getElementById('newNameInput').addEventListener('input', persistNewDraft);
 document.getElementById('newDatesInput').addEventListener('input', persistNewDraft);
+document.getElementById('newDeceasedCheckbox').addEventListener('change', (e) => {
+  const cb = e.target;
+  const datesInput = document.getElementById('newDatesInput');
+  if(cb.checked){
+    if(hasEndDate(datesInput.value)){
+      newDraft.deceased = true; // already derived from a real passing date -- just reflect it
+    } else {
+      const mainName = parseDisplayName(document.getElementById('newNameInput').value || 'this person').main;
+      const knowsDate = confirm(`Do you know the date ${mainName} passed away?\n\nClick OK to enter it now, or Cancel if it isn't known yet.`);
+      if(knowsDate){
+        const entered = (prompt('Enter the date of passing (e.g. 05/03/2020):', '') || '').trim();
+        if(entered){
+          if(datesInput.value && datesInput.value.includes('-')) datesInput.value = datesInput.value.replace(/-[^-]*$/, '- ' + entered);
+          else if(datesInput.value) datesInput.value = datesInput.value.trim() + ' - ' + entered;
+          else datesInput.value = '- ' + entered;
+        }
+      }
+      newDraft.deceased = true; // flagged deceased either way -- with or without a known date
+    }
+  } else {
+    newDraft.deceased = false;
+  }
+  refreshNewSheet();
+});
 document.getElementById('closeNewSheet').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
 document.getElementById('cancelNewPerson').onclick = () => { document.getElementById('newOverlay').classList.remove('active'); clearNewDraft(); };
 document.getElementById('newOverlay').onclick = (e) => { if(e.target.id === 'newOverlay'){ e.currentTarget.classList.remove('active'); clearNewDraft(); } };
@@ -1837,7 +2098,7 @@ document.getElementById('saveNewPerson').onclick = () => {
   const dates = document.getElementById('newDatesInput').value.trim();
   const maxId = PEOPLE.reduce((m,p) => Math.max(m,p.id), 0);
   const newId = maxId + 1;
-  const newPerson = { id: newId, name, dates, photos: newDraft.photos || [],
+  const newPerson = { id: newId, name, dates, deceased: !!newDraft.deceased, photos: newDraft.photos || [],
     spouse: [...newDraft.spouse], parents: [...newDraft.parents],
     siblings: [], children: [...newDraft.children] };
 
@@ -2238,6 +2499,12 @@ async function publishToGitHub(){
     const commitMessage = summarizeChanges(originalPeopleSnapshot, PEOPLE);
     const result = await ghPutFile(cfg, 'data.json', utf8ToBase64(JSON.stringify(PEOPLE)), commitMessage);
     knownDataSha = result && result.content ? result.content.sha : null;
+    // Keep the subscribable birthday feed (birthdays.ics) in sync with every publish, so
+    // anyone already subscribed to it picks up new/changed people automatically -- never
+    // let a failure here block the data.json publish that already succeeded above.
+    try{
+      await ghPutFile(cfg, 'birthdays.ics', utf8ToBase64(generateBirthdayICS()), 'Update birthday reminders calendar');
+    }catch(icsErr){ console.error('birthdays.ics publish failed (data.json still published fine):', icsErr); }
     originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
     saveToLocalStorage();
     showPublishProgress('Published! Everyone can now see your changes.');
@@ -2591,10 +2858,12 @@ if(pendingActiveDraft && BY_ID[pendingActiveDraft.personId]){
 const MODAL_CONFIG = [
   { id: 'photoViewerOverlay', closeBtnId: 'viewerBack' },
   { id: 'deleteConfirmOverlay', closeBtnId: 'cancelDelete' },
+  { id: 'deceasedInfoOverlay', closeBtnId: 'deceasedInfoClose' },
   { id: 'recoveryOverlay', closeBtnId: 'discardRecovery' },
   { id: 'recoveryReviewOverlay', closeBtnId: 'reviewClose' },
   { id: 'settingsOverlay', closeBtnId: 'settingsClose' },
   { id: 'newOverlay', closeBtnId: 'closeNewSheet' },
+  { id: 'remindersOverlay', closeBtnId: 'remindersClose' },
   { id: 'overlay', closeBtnId: 'closeSheet' },
 ];
 history.pushState({appBase: true}, '', location.href);
@@ -2688,7 +2957,7 @@ window.addEventListener('popstate', () => {
   const names = todaysBirthdayPeople.map(p => parseDisplayName(p.name).main);
   const label = todaysBirthdayPeople.length === 1 ? 'birthday' : 'birthdays';
   const textEl = document.getElementById('birthdayBannerText');
-  textEl.innerHTML = `\u{1F382} Today's ${label}: ` + todaysBirthdayPeople
+  textEl.innerHTML = `Today's ${label}: ` + todaysBirthdayPeople
     .map(p => `<span class="bday-name" data-id="${p.id}">${esc(parseDisplayName(p.name).main)}</span>`)
     .join(', ');
   textEl.querySelectorAll('.bday-name').forEach(el => {
@@ -2701,14 +2970,17 @@ window.addEventListener('popstate', () => {
   };
 })();
 
-// --- Downloadable birthday calendar (.ics) -- for import into the phone's own Calendar
-// app, so reminders keep working even without opening this site. Living and deceased
-// people are both included here (unlike the banner above) since a private calendar
-// reminder to remember a loved one is a different, more personal context than a
-// cheerful pop-up banner shown to everyone who opens the site.
-function generateBirthdayICS(){
+// --- Birthday reminders: download a picked-people .ics, or subscribe to the full,
+// always-current one published alongside data.json. generateBirthdayICS() itself no longer
+// excludes deceased people -- it renders exactly whoever it's given, since a family member
+// may deliberately want a reminder to remember a loved one who has passed. The "who's
+// deceased is unchecked by default" behavior lives in the picker below instead; the one
+// exception is the no-argument call used for the live Subscribe feed (there's no picker
+// selection behind that one, so it falls back to the same living-by-default set).
+function generateBirthdayICS(peopleList){
+  const list = peopleList || PEOPLE.filter(p => !isDeceased(p));
   const lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Our Family Tree//Birthdays//EN','CALSCALE:GREGORIAN'];
-  PEOPLE.forEach(p => {
+  list.forEach(p => {
     const md = parseBirthMonthDay(p.dates);
     if(!md) return;
     const dateStr = '2000' + String(md.month).padStart(2,'0') + String(md.day).padStart(2,'0');
@@ -2724,17 +2996,128 @@ function generateBirthdayICS(){
   lines.push('END:VCALENDAR');
   return lines.join('\r\n');
 }
-document.getElementById('downloadBirthdaysBtn').onclick = () => {
-  const ics = generateBirthdayICS();
+function downloadICS(ics, filename){
   const blob = new Blob([ics], {type: 'text/calendar'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'family-birthdays.ics';
+  a.download = filename;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+// Whose checked state on THIS device has been manually flipped away from the smart default
+// below -- everyone living defaults to checked (so a person added to the tree later is
+// automatically covered without doing anything), while anyone deceased defaults to
+// UNCHECKED (so their birthday doesn't turn into a surprise reminder) but still appears in
+// the list, since people often want the option to keep a reminder to remember them by.
+const REMINDERS_OVERRIDE_KEY = 'birthdayRemindersOverrides_v1';
+function getRemindersOverrides(){
+  try{
+    const raw = localStorage.getItem(REMINDERS_OVERRIDE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  }catch(e){ return new Set(); }
+}
+function saveRemindersOverrides(set){
+  try{ localStorage.setItem(REMINDERS_OVERRIDE_KEY, JSON.stringify([...set])); }catch(e){}
+}
+let remindersOverrides = getRemindersOverrides();
+let remindersFilterText = '';
+
+function reminderDefaultChecked(p){ return !isDeceased(p); }
+function isReminderChecked(p){
+  return reminderDefaultChecked(p) ? !remindersOverrides.has(p.id) : remindersOverrides.has(p.id);
+}
+function setReminderChecked(p, checked){
+  if(checked === reminderDefaultChecked(p)) remindersOverrides.delete(p.id);
+  else remindersOverrides.add(p.id);
+}
+
+function remindersEligiblePeople(){
+  // Deceased people are included here too (unchecked by default) -- see comment above.
+  return PEOPLE
+    .filter(p => parseBirthMonthDay(p.dates))
+    .slice()
+    .sort((a,b) => parseDisplayName(a.name).main.localeCompare(parseDisplayName(b.name).main));
+}
+function remindersFilteredPeople(){
+  const q = remindersFilterText.trim().toLowerCase();
+  return remindersEligiblePeople().filter(p => !q || parseDisplayName(p.name).main.toLowerCase().includes(q));
+}
+function renderRemindersList(){
+  const listEl = document.getElementById('remindersList');
+  const people = remindersFilteredPeople();
+  listEl.innerHTML = people.map(p => {
+    const checked = isReminderChecked(p);
+    const deceasedTag = isDeceased(p)
+      ? ` <span style="vertical-align:-2px;" title="Deceased">${COFFIN_ICON_HTML}</span>` : '';
+    return `<label style="display:flex; align-items:center; gap:10px; padding:6px 2px; cursor:pointer;">
+      <input type="checkbox" data-reminder-id="${p.id}" ${checked ? 'checked' : ''} style="width:18px; height:18px; flex-shrink:0;">
+      <span>${esc(parseDisplayName(p.name).main)}${deceasedTag}</span>
+    </label>`;
+  }).join('') || `<div style="color:#a3946f; font-size:.85em; padding:8px 2px;">No matches.</div>`;
+  listEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.onchange = () => {
+      const id = Number(cb.dataset.reminderId);
+      setReminderChecked(BY_ID[id], cb.checked);
+      saveRemindersOverrides(remindersOverrides);
+      updateRemindersCount();
+    };
+  });
+  updateRemindersCount();
+}
+function updateRemindersCount(){
+  const includedCount = remindersEligiblePeople().filter(p => isReminderChecked(p)).length;
+  document.getElementById('remindersSelectedCount').textContent = includedCount;
+}
+
+// The live subscribe feed: a static file written to the same place as data.json every
+// time changes are published (see publishToGitHub), so it always has the same address.
+function birthdaysIcsHttpsUrl(){
+  return location.href.replace(/[^/]*$/, '') + 'birthdays.ics';
+}
+function setupRemindersSubscribeLinks(){
+  const httpsUrl = birthdaysIcsHttpsUrl();
+  document.getElementById('remindersSubscribeLink').href = httpsUrl.replace(/^https?:\/\//, 'webcal://');
+  document.getElementById('remindersCopyLink').onclick = async () => {
+    try{
+      await navigator.clipboard.writeText(httpsUrl);
+      showPublishProgress('Link copied.');
+      hidePublishProgress(2000);
+    }catch(e){
+      prompt('Copy this link:', httpsUrl);
+    }
+  };
+}
+
+document.getElementById('remindersClose').onclick = () => document.getElementById('remindersOverlay').classList.remove('active');
+document.getElementById('remindersOverlay').onclick = (e) => { if(e.target.id==='remindersOverlay') e.currentTarget.classList.remove('active'); };
+document.getElementById('downloadBirthdaysBtn').onclick = () => {
+  remindersFilterText = '';
+  document.getElementById('remindersSearchBox').value = '';
+  renderRemindersList();
+  setupRemindersSubscribeLinks();
+  document.getElementById('remindersOverlay').classList.add('active');
+};
+document.getElementById('remindersSearchBox').oninput = (e) => {
+  remindersFilterText = e.target.value;
+  renderRemindersList();
+};
+document.getElementById('remindersSelectAll').onclick = () => {
+  remindersFilteredPeople().forEach(p => setReminderChecked(p, true));
+  saveRemindersOverrides(remindersOverrides);
+  renderRemindersList();
+};
+document.getElementById('remindersSelectNone').onclick = () => {
+  remindersFilteredPeople().forEach(p => setReminderChecked(p, false));
+  saveRemindersOverrides(remindersOverrides);
+  renderRemindersList();
+};
+document.getElementById('remindersDownloadBtn').onclick = () => {
+  const selected = remindersEligiblePeople().filter(p => isReminderChecked(p));
+  downloadICS(generateBirthdayICS(selected), 'family-birthdays.ics');
 };
 </script>
 
