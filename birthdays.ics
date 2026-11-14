@@ -1,0 +1,656 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Our Family Tree//Birthdays//EN
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+UID:birthday-0@ourfamilytree
+DTSTART;VALUE=DATE:20000728
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Markus Josef Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-4@ourfamilytree
+DTSTART;VALUE=DATE:20000917
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Markus Schalk Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-6@ourfamilytree
+DTSTART;VALUE=DATE:20000914
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Janine Bester’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-8@ourfamilytree
+DTSTART;VALUE=DATE:20000517
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Riaan Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-11@ourfamilytree
+DTSTART;VALUE=DATE:20000130
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lee Jacobus Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-26@ourfamilytree
+DTSTART;VALUE=DATE:20000711
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Heyla Margeritha Schoeman’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-31@ourfamilytree
+DTSTART;VALUE=DATE:20001118
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jan Hendrik Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-32@ourfamilytree
+DTSTART;VALUE=DATE:20000207
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Elizabeth Margaritha Lausberg’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-35@ourfamilytree
+DTSTART;VALUE=DATE:20000101
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Celius Leonardus Eduard Lausberg’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-36@ourfamilytree
+DTSTART;VALUE=DATE:20001008
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Louis Roelof Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-38@ourfamilytree
+DTSTART;VALUE=DATE:20000424
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jonette Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-42@ourfamilytree
+DTSTART;VALUE=DATE:20000603
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Christina Johanna Maria Rykheer’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-43@ourfamilytree
+DTSTART;VALUE=DATE:20000914
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jacoba Margeretha Joubert’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-44@ourfamilytree
+DTSTART;VALUE=DATE:20000108
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Philippus Arnoldus Rykheer’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-45@ourfamilytree
+DTSTART;VALUE=DATE:20000810
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Mauritz Frederik Rykheer’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-47@ourfamilytree
+DTSTART;VALUE=DATE:20001105
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lynette Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-48@ourfamilytree
+DTSTART;VALUE=DATE:20000112
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Phillippus Arnoldus Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-49@ourfamilytree
+DTSTART;VALUE=DATE:20001220
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Phillippus Arnoldus Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-50@ourfamilytree
+DTSTART;VALUE=DATE:20000416
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Santie de Waal’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-51@ourfamilytree
+DTSTART;VALUE=DATE:20000517
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Marisa Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-52@ourfamilytree
+DTSTART;VALUE=DATE:20000327
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Phillippus Arnoldus Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-54@ourfamilytree
+DTSTART;VALUE=DATE:20000219
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Madelein Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-55@ourfamilytree
+DTSTART;VALUE=DATE:20000214
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Anthony Claude Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-56@ourfamilytree
+DTSTART;VALUE=DATE:20000827
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Brenden Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-58@ourfamilytree
+DTSTART;VALUE=DATE:20001112
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Breyden Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-59@ourfamilytree
+DTSTART;VALUE=DATE:20000226
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Johanna Maria Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-60@ourfamilytree
+DTSTART;VALUE=DATE:20000406
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Ruvan Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-61@ourfamilytree
+DTSTART;VALUE=DATE:20000310
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Chanèl Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-62@ourfamilytree
+DTSTART;VALUE=DATE:20001219
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Juanél Roux’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-64@ourfamilytree
+DTSTART;VALUE=DATE:20001202
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Johanna Maria Vendel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-65@ourfamilytree
+DTSTART;VALUE=DATE:20000901
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lorenz Vendel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-66@ourfamilytree
+DTSTART;VALUE=DATE:20000120
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Anja Vendel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-67@ourfamilytree
+DTSTART;VALUE=DATE:20000212
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lorenz Vendel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-70@ourfamilytree
+DTSTART;VALUE=DATE:20000212
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Steven Ross Jordan’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-71@ourfamilytree
+DTSTART;VALUE=DATE:20001225
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 James Jordan’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-73@ourfamilytree
+DTSTART;VALUE=DATE:20000413
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Damian Lee Jordan’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-74@ourfamilytree
+DTSTART;VALUE=DATE:20000522
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Michael Ehlers’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-75@ourfamilytree
+DTSTART;VALUE=DATE:20000417
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Paul Gierke’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-76@ourfamilytree
+DTSTART;VALUE=DATE:20000415
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lente Gierke’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-77@ourfamilytree
+DTSTART;VALUE=DATE:20000415
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Sven Gierke’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-78@ourfamilytree
+DTSTART;VALUE=DATE:20000304
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Juanita Gierke’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-91@ourfamilytree
+DTSTART;VALUE=DATE:20000304
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 JP Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-92@ourfamilytree
+DTSTART;VALUE=DATE:20000227
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Verona Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-93@ourfamilytree
+DTSTART;VALUE=DATE:20001130
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Welma Verona Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-95@ourfamilytree
+DTSTART;VALUE=DATE:20000718
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Rone Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-97@ourfamilytree
+DTSTART;VALUE=DATE:20001117
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 JS Burger’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-100@ourfamilytree
+DTSTART;VALUE=DATE:20000323
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lambert Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-102@ourfamilytree
+DTSTART;VALUE=DATE:20000601
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Lize Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-105@ourfamilytree
+DTSTART;VALUE=DATE:20001104
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Hendrik Lambertus Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-106@ourfamilytree
+DTSTART;VALUE=DATE:20000709
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Barend Mattheus Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-108@ourfamilytree
+DTSTART;VALUE=DATE:20000113
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Sandra Glynnis Kettle’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-112@ourfamilytree
+DTSTART;VALUE=DATE:20000320
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Erika Voges’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-115@ourfamilytree
+DTSTART;VALUE=DATE:20000107
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Hennie Swartz’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-118@ourfamilytree
+DTSTART;VALUE=DATE:20000515
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Annemarie Kotze’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-119@ourfamilytree
+DTSTART;VALUE=DATE:20000617
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Reuben Kotze’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-127@ourfamilytree
+DTSTART;VALUE=DATE:20001130
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Michael Crinwright Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-128@ourfamilytree
+DTSTART;VALUE=DATE:20000416
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Michelle Human’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-129@ourfamilytree
+DTSTART;VALUE=DATE:20000115
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Marcel Markus Human’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-130@ourfamilytree
+DTSTART;VALUE=DATE:20000705
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Markus Jacobus Dawid Human’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-131@ourfamilytree
+DTSTART;VALUE=DATE:20000314
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Carley Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-133@ourfamilytree
+DTSTART;VALUE=DATE:20000405
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Helena Clarice Johanna Kilian’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-134@ourfamilytree
+DTSTART;VALUE=DATE:20000910
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jaunie Ellard’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-136@ourfamilytree
+DTSTART;VALUE=DATE:20000614
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jason Thomas Ellard’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-137@ourfamilytree
+DTSTART;VALUE=DATE:20000805
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Brian Ellard’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-138@ourfamilytree
+DTSTART;VALUE=DATE:20000223
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Phillip Rudolph Kilian’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-139@ourfamilytree
+DTSTART;VALUE=DATE:20000517
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Ruwan Kilian’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-140@ourfamilytree
+DTSTART;VALUE=DATE:20000910
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Whitney  Anne Kilian’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-143@ourfamilytree
+DTSTART;VALUE=DATE:20000205
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Judith Claire Rothbone’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-145@ourfamilytree
+DTSTART;VALUE=DATE:20000307
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Dwayne Caine’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-146@ourfamilytree
+DTSTART;VALUE=DATE:20000827
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Janine Jacqueline de Lange’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-147@ourfamilytree
+DTSTART;VALUE=DATE:20001227
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Marushka de Lange’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-148@ourfamilytree
+DTSTART;VALUE=DATE:20001116
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jean-Pierre de Lange’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-151@ourfamilytree
+DTSTART;VALUE=DATE:20000822
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Rita Yvonne Olivier’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-156@ourfamilytree
+DTSTART;VALUE=DATE:20000910
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Estelle Bouwer’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-157@ourfamilytree
+DTSTART;VALUE=DATE:20000428
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Sanet Cummings’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-158@ourfamilytree
+DTSTART;VALUE=DATE:20000917
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jennifer Cummings’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-159@ourfamilytree
+DTSTART;VALUE=DATE:20000214
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Claire Cummings’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-160@ourfamilytree
+DTSTART;VALUE=DATE:20000922
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Alistair Donald Cummings’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-161@ourfamilytree
+DTSTART;VALUE=DATE:20000322
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Suzette (Bouwer) du Toit’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-162@ourfamilytree
+DTSTART;VALUE=DATE:20000309
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Arnouw Johan Nel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-163@ourfamilytree
+DTSTART;VALUE=DATE:20000416
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Andrew du Tiot’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-164@ourfamilytree
+DTSTART;VALUE=DATE:20000603
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Craig du Toit’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-165@ourfamilytree
+DTSTART;VALUE=DATE:20000326
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Brenda Nel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-166@ourfamilytree
+DTSTART;VALUE=DATE:20000511
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Anshin Nel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-167@ourfamilytree
+DTSTART;VALUE=DATE:20000827
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jan Nel’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-219@ourfamilytree
+DTSTART;VALUE=DATE:20001109
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Gerhardus Petrus Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-221@ourfamilytree
+DTSTART;VALUE=DATE:20001208
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Petrus Gerhardus Dominique Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-222@ourfamilytree
+DTSTART;VALUE=DATE:20000712
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Claruissa Maria Diederiks’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-223@ourfamilytree
+DTSTART;VALUE=DATE:20000406
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jennette Sophia Elizabeth Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-224@ourfamilytree
+DTSTART;VALUE=DATE:20001102
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Dominique Viljoen Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-225@ourfamilytree
+DTSTART;VALUE=DATE:20000414
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Rikus Botha’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-227@ourfamilytree
+DTSTART;VALUE=DATE:20000823
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Jaun-Mari van der Walt’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+BEGIN:VEVENT
+UID:birthday-230@ourfamilytree
+DTSTART;VALUE=DATE:20000704
+RRULE:FREQ=YEARLY
+SUMMARY:🎂 Juvandre Diederiks’s Birthday
+DESCRIPTION:Birthday reminder from Our Family Tree
+END:VEVENT
+END:VCALENDAR
