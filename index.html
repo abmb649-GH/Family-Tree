@@ -889,8 +889,21 @@ function rebuildIndex(){
   recomputeSiblingsAndChildren();
 }
 
+// Computes the same sha1 "git blob" hash GitHub's Contents API reports as a file's
+// `sha`, straight from bytes we already have -- lets us know this tab's starting
+// data.json hash without a second network round-trip just to ask GitHub for it.
+async function gitBlobSha1(bytes){
+  const header = new TextEncoder().encode(`blob ${bytes.length}\0`);
+  const full = new Uint8Array(header.length + bytes.length);
+  full.set(header, 0);
+  full.set(bytes, header.length);
+  const digest = await crypto.subtle.digest('SHA-1', full);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 // The family site's data.json is always the source of truth -- fetched fresh on every
 // visit so everyone sees the latest published version, never a stale local copy.
+let initialDataBytes = null;
 try{
   // Cache-busting query param: GitHub Pages serves through a CDN that can cache files
   // for a few minutes independently of the browser -- {cache:'no-store'} alone only
@@ -898,7 +911,8 @@ try{
   // forces every layer to treat this as a fresh request every time.
   const resp = await fetch('data.json?v=' + Date.now(), {cache: 'no-store'});
   if(!resp.ok) throw new Error('Server responded with ' + resp.status);
-  PEOPLE = await resp.json();
+  initialDataBytes = new Uint8Array(await resp.arrayBuffer());
+  PEOPLE = JSON.parse(new TextDecoder('utf-8').decode(initialDataBytes));
 }catch(err){
   document.body.innerHTML = `<div style="padding:60px 24px;text-align:center;font-family:-apple-system,sans-serif;color:#5f4a24;max-width:420px;margin:0 auto;">
     <h2 style="margin-bottom:8px;">Couldn't load the family tree</h2>
@@ -920,7 +934,16 @@ const todaysBirthdayPeople = PEOPLE.filter(p => {
 // descriptive commit message (what actually changed since then) and to detect if the
 // live site has been changed by someone else since this tab last knew about it.
 let originalPeopleSnapshot = JSON.parse(JSON.stringify(PEOPLE));
+// Seeded from the exact bytes just fetched above (not left null) so the "has someone
+// else published since I opened this page?" check in checkForStaleData() works even on
+// this tab's very first publish. Previously this started as null and was only ever set
+// after a successful publish FROM THIS TAB, so a tab left open for a while (or a second
+// device/tab editing the same day) could publish for the first time, silently skip the
+// staleness check entirely (see checkForStaleData below), and overwrite newer photos or
+// edits published elsewhere in the meantime without any warning.
 let knownDataSha = null;
+try{ knownDataSha = initialDataBytes ? await gitBlobSha1(initialDataBytes) : null; }
+catch(e){ console.error('Could not compute initial data.json hash for staleness checks:', e); }
 
 // Detect unpublished local edits from a previous visit (e.g. a connection failure while
 // publishing, or the tab reloading mid-edit) that never made it into data.json. This is
@@ -2444,7 +2467,9 @@ function summarizeChanges(before, after){
 
 // Checks whether the live data.json has changed since this tab last knew about it --
 // e.g. from another device, another tab, or someone else entirely. Returns the current
-// sha either way; `stale` is only meaningful once we actually have a prior sha to compare.
+// sha either way; `stale` is only meaningful once we actually have a prior sha to compare
+// (knownDataSha is normally seeded from the page-load fetch above, so this is almost
+// always available -- it's null only if that hash computation itself failed).
 async function checkForStaleData(cfg){
   const currentSha = await ghGetFileSha(cfg, 'data.json');
   const stale = knownDataSha !== null && currentSha !== null && currentSha !== knownDataSha;
